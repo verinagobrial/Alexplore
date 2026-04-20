@@ -1,3 +1,4 @@
+// app/packages/[id]/page.tsx
 'use client'
 
 import { useState, use } from 'react'
@@ -39,11 +40,21 @@ export default function PackageDetailPage({ params }: { params: Promise<{ id: st
   const totalPrice = pkg.priceInCents * guests
 
   function handleBookNow() {
+    // Make sure we have a valid date
+    if (!travelDate) {
+      alert('Please select a travel date')
+      return
+    }
+
+    // Use the id from params (the URL ID) or pkg.id if available
+    const packageIdToUse = id || (pkg as any).id
+    
     const searchParams = new URLSearchParams({
-      packageId: pkg.id,
+      packageId: packageIdToUse,
       guests: guests.toString(),
       date: travelDate,
     })
+    
     router.push(`/booking?${searchParams.toString()}`)
   }
 
@@ -51,19 +62,33 @@ export default function PackageDetailPage({ params }: { params: Promise<{ id: st
     <main className="min-h-screen">
       <Header />
       
-      {/* Breadcrumb */}
-      <div className="bg-muted/50 border-b border-border">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center gap-2 text-sm">
-            <Link href="/packages" className="text-muted-foreground hover:text-primary flex items-center gap-1">
-              <ArrowLeft className="h-4 w-4" />
-              Back to Packages
-            </Link>
-            <span className="text-muted-foreground">/</span>
-            <span className="text-foreground font-medium">{pkg.name}</span>
-          </div>
-        </div>
-      </div>
+  {/* Hero Section */}
+     <section className="relative py-20 overflow-hidden">
+  {/* Image Background */}
+  <div 
+    className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
+    style={{ backgroundImage: "url('/images/image-1773580378733.png')" }}
+  />
+  
+  {/* Blurred Overlay */}
+  <div className="absolute inset-0 bg-primary/60 backdrop-blur-sm z-0" />
+  
+  {/* Optional: Animated gradient overlay */}
+  <div className="absolute inset-0 bg-gradient-to-r from-primary/40 via-primary/20 to-primary/40 z-0" />
+
+  {/* Content */}
+  <div className="container mx-auto px-4 relative z-10">
+    <div className="max-w-3xl mx-auto text-center text-primary-foreground">
+      <h1 className="text-4xl md:text-5xl font-serif font-bold mb-4 animate-fade-in text-secondary">
+        Explore Our Travel Packages
+      </h1>
+      <p className="text-lg opacity-90 mb-8 animate-slide-up">
+       The Soul of the Mediterranean in Your Hands.
+      </p>
+    </div>
+  </div>
+</section>
+
 
       <div className="container mx-auto px-4 py-12">
         <div className="grid lg:grid-cols-3 gap-8">

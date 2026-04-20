@@ -117,10 +117,12 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/* IMPORTANT: Remove the border from all elements by default */
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply outline-ring/50;
   }
+  /* Don't apply border-border to all elements - only to specific ones */
   body {
     @apply bg-background text-foreground;
   }
@@ -233,14 +235,14 @@ html {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--secondary);
+  background: oklch(0.85 0.15 85); /* Yellow-500 */
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--primary);
+  background: oklch(0.45 0.08 175); /* Teal #326964 */
   border-radius: 5px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--accent);
+  background: oklch(0.55 0.08 175);
 }

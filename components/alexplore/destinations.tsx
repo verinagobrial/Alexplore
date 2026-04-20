@@ -5,43 +5,54 @@ import { ArrowRight, MapPin, Star, Heart } from "lucide-react"
 import { AnimatedSection } from "./animated-section"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
+import { useRouter } from "next/navigation" // For App Router
+// import { useRouter } from "next/router" // For Pages Router (if using old structure)
 
 const destinations = [
   {
+    id: "qaitbay-citadel",
     title: "Qaitbay Citadel",
     description: "A 15th-century fortress built on the legendary site of the Pharos Lighthouse, offering stunning Mediterranean views.",
-    image: "/images/qaitbay-citadel.jpg",
+    image: "/images/6.jpg",
     rating: 4.9,
     reviews: 2847,
     category: "Historical",
+    slug: "qaitbay-citadel"
   },
   {
+    id: "montaza-palace",
     title: "Montaza Palace",
     description: "Royal gardens and palatial elegance overlooking pristine beaches - a perfect blend of nature and history.",
-    image: "/images/montaza-palace.jpg",
+    image: "/images/monazah palace.jpg",
     rating: 4.8,
     reviews: 1923,
     category: "Palace",
+    slug: "montaza-palace"
   },
   {
+    id: "bibliotheca-alexandrina",
     title: "Bibliotheca Alexandrina",
     description: "A modern architectural marvel honoring the ancient Library of Alexandria, hosting millions of books and artifacts.",
-    image: "/images/bibliotheca.jpg",
+    image: "/images/Alexandria Library Egypt.jpeg",
     rating: 4.9,
     reviews: 3156,
     category: "Cultural",
+    slug: "bibliotheca-alexandrina"
   },
   {
+    id: "corniche",
     title: "The Corniche",
     description: "A scenic 16km waterfront promenade perfect for sunset walks, local dining, and experiencing authentic Alexandrian life.",
-    image: "/images/corniche.jpg",
+    image: "/images/15 Reasons Why You Should Visit Alexandria Egypt & Why it's Worth it!.jpeg",
     rating: 4.7,
     reviews: 4521,
     category: "Leisure",
+    slug: "the-corniche"
   },
 ]
 
 export function Destinations() {
+  const router = useRouter()
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
   const [likedDestinations, setLikedDestinations] = useState<number[]>([])
 
@@ -49,6 +60,15 @@ export function Destinations() {
     setLikedDestinations((prev) =>
       prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
     )
+  }
+
+  // Navigation handlers
+  const handleViewAll = () => {
+    router.push("/destinations")
+  }
+
+  const handleDestinationClick = (slug: string) => {
+    router.push(`/destinations/${slug}`)
   }
 
   return (
@@ -81,6 +101,7 @@ export function Destinations() {
                 className="group relative overflow-hidden rounded-3xl bg-card shadow-sm hover:shadow-2xl transition-all duration-500 cursor-pointer"
                 onMouseEnter={() => setHoveredIndex(index)}
                 onMouseLeave={() => setHoveredIndex(null)}
+                onClick={() => handleDestinationClick(destination.slug)}
               >
                 <div className="aspect-[3/4] relative">
                   <Image
@@ -148,12 +169,13 @@ export function Destinations() {
           ))}
         </div>
 
-        {/* View All Button */}
+        {/* View All Button with Navigation */}
         <AnimatedSection delay={500} className="text-center mt-12">
           <Button
             size="lg"
             variant="outline"
             className="group border-primary text-primary hover:bg-primary hover:text-primary-foreground rounded-full px-8"
+            onClick={handleViewAll}
           >
             View All Destinations
             <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />

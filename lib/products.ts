@@ -1,3 +1,4 @@
+// lib/products.ts
 export interface TravelPackage {
   id: string
   name: string
@@ -11,6 +12,7 @@ export interface TravelPackage {
   reviewCount: number
   image: string
   category: 'adventure' | 'cultural' | 'luxury' | 'family'
+  currency?: string // Added currency field
 }
 
 export const TRAVEL_PACKAGES: TravelPackage[] = [
@@ -37,7 +39,8 @@ export const TRAVEL_PACKAGES: TravelPackage[] = [
     rating: 4.8,
     reviewCount: 324,
     image: '/images/bibliotheca.jpg',
-    category: 'cultural'
+    category: 'cultural',
+    currency: 'USD'
   },
   {
     id: 'mediterranean-luxury',
@@ -62,7 +65,8 @@ export const TRAVEL_PACKAGES: TravelPackage[] = [
     rating: 4.9,
     reviewCount: 156,
     image: '/images/hotel-1.jpg',
-    category: 'luxury'
+    category: 'luxury',
+    currency: 'USD'
   },
   {
     id: 'ancient-wonders',
@@ -87,7 +91,8 @@ export const TRAVEL_PACKAGES: TravelPackage[] = [
     rating: 4.7,
     reviewCount: 218,
     image: '/images/gallery-1.jpg',
-    category: 'cultural'
+    category: 'cultural',
+    currency: 'USD'
   },
   {
     id: 'family-adventure',
@@ -112,7 +117,8 @@ export const TRAVEL_PACKAGES: TravelPackage[] = [
     rating: 4.8,
     reviewCount: 189,
     image: '/images/montaza-palace.jpg',
-    category: 'family'
+    category: 'family',
+    currency: 'USD'
   },
   {
     id: 'coastal-adventure',
@@ -137,7 +143,8 @@ export const TRAVEL_PACKAGES: TravelPackage[] = [
     rating: 4.6,
     reviewCount: 142,
     image: '/images/corniche.jpg',
-    category: 'adventure'
+    category: 'adventure',
+    currency: 'USD'
   },
   {
     id: 'spiritual-journey',
@@ -162,23 +169,44 @@ export const TRAVEL_PACKAGES: TravelPackage[] = [
     rating: 4.9,
     reviewCount: 98,
     image: '/images/mosque.jpg',
-    category: 'cultural'
+    category: 'cultural',
+    currency: 'USD'
   }
 ]
 
-// Helper function to get package by ID - with safety check
+// Helper function to get package by ID
 export function getPackageById(id: string | undefined | null): TravelPackage | undefined {
   if (!id) return undefined
   return TRAVEL_PACKAGES.find(pkg => pkg.id === id)
 }
 
-// Helper function to format price - with safety check
-export function formatPrice(priceInCents: number | undefined | null): string {
+// Helper function to format price
+export function formatPrice(priceInCents: number | undefined | null, currency: string = 'USD'): string {
   if (priceInCents === undefined || priceInCents === null) {
     return '$0.00'
   }
+  
+  const priceInDollars = priceInCents / 100
+  
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: 'USD'
-  }).format(priceInCents / 100)
+    currency: currency
+  }).format(priceInDollars)
+}
+
+// Helper function to get price in different currency (mock conversion)
+export function convertPrice(priceInCents: number, fromCurrency: string, toCurrency: string): number {
+  if (fromCurrency === toCurrency) return priceInCents
+  
+  const rates: Record<string, number> = {
+    USD: 1,
+    EGP: 48.5,
+    EUR: 0.92,
+    GBP: 0.79
+  }
+  
+  const priceInUSD = priceInCents / 100
+  const convertedPrice = priceInUSD * rates[toCurrency]
+  
+  return Math.round(convertedPrice * 100)
 }

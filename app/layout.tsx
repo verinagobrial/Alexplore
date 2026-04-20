@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { Cormorant_Garamond, Inter } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
-import './globals.css'
+import './globals.css' 
 
 const cormorant = Cormorant_Garamond({ 
   subsets: ["latin"],
@@ -18,14 +18,14 @@ export const metadata: Metadata = {
   title: 'Alexplore | The Soul of the Mediterranean',
   description: 'Discover Alexandria, Egypt - explore ancient wonders, Mediterranean beauty, and unforgettable travel experiences with Alexplore.',
   generator: 'v0.app',
- icons: {
+  icons: {
     icon: [
       {
         url: '/favicon.ico',
         sizes: 'any',
       },
       {
-       url: '/alexandre-logo.png',
+        url: '/alexandre-logo.png',
         type: 'image/png',
       },
     ],

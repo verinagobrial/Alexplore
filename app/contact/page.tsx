@@ -60,21 +60,36 @@ export default function ContactPage() {
     <main className="min-h-screen">
       <Header />
 
-      {/* Hero */}
-      <section className="relative py-20 bg-primary text-primary-foreground">
-        <div className="container mx-auto px-4 text-center">
-          <h1 className="text-4xl md:text-5xl font-serif font-bold mb-4">
-            Get in Touch
-          </h1>
-          <p className="text-lg opacity-90 max-w-2xl mx-auto">
-            Have questions about our packages or need help planning your trip? 
-            {"We're here to help make your Alexandria adventure unforgettable."}
-          </p>
-        </div>
-      </section>
+      {/* Hero Section */}
+     <section className="relative py-20 overflow-hidden">
+  {/* Image Background */}
+  <div 
+    className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
+    style={{ backgroundImage: "url('/images/image-1773580378733.png')" }}
+  />
+  
+  {/* Blurred Overlay */}
+  <div className="absolute inset-0 bg-primary/60 backdrop-blur-sm z-0" />
+  
+  {/* Optional: Animated gradient overlay */}
+  <div className="absolute inset-0 bg-gradient-to-r from-primary/40 via-primary/20 to-primary/40 z-0" />
+
+  {/* Content */}
+  <div className="container mx-auto px-4 relative z-10">
+    <div className="max-w-3xl mx-auto text-center text-primary-foreground">
+      <h1 className="text-4xl md:text-5xl font-serif font-bold mb-4 animate-fade-in text-secondary">
+        Get in Touch
+      </h1>
+      <p className="text-lg opacity-90 mb-8 animate-slide-up">
+       The Soul of the Mediterranean in Your Hands.
+      </p>
+    </div>
+  </div>
+</section>
+
 
       {/* Contact Info Cards */}
-      <section className="py-12 bg-muted/50">
+      <section className="py-30 bg-muted/50">
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-3 gap-6 -mt-20">
             <Card className="text-center">

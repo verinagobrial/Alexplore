@@ -131,4 +131,4 @@ export default async function AdminNewsletterPage() {
       </Card>
     </div>
   )
-}
+} 

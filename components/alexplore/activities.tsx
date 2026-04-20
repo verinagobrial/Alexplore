@@ -1,5 +1,5 @@
 "use client"
-
+import Link from "next/link"
 import Image from "next/image"
 import { Clock, Star, ArrowRight, Users, Compass, Waves, Camera, Utensils } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
@@ -228,16 +228,19 @@ export function Activities() {
         </div>
 
         {/* View All Link */}
-        <AnimatedSection delay={600} className="text-center mt-12">
-          <Button
-            size="lg"
-            variant="outline"
-            className="group border-primary text-primary hover:bg-primary hover:text-primary-foreground rounded-full px-8"
-          >
-            Explore All Activities
-            <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-          </Button>
-        </AnimatedSection>
+       
+<AnimatedSection delay={600} className="text-center mt-12">
+  <Link href="/activities">
+    <Button
+      size="lg"
+      variant="outline"
+      className="group border-primary text-primary hover:bg-primary hover:text-primary-foreground rounded-full px-8"
+    >
+      Explore All Activities
+      <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+    </Button>
+  </Link>
+</AnimatedSection>
       </div>
     </section>
   )

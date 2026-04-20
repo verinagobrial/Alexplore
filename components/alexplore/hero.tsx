@@ -6,9 +6,9 @@ import { ArrowRight, Play, MapPin, Calendar, Users } from "lucide-react"
 import { useState, useEffect } from "react"
 
 const heroImages = [
-  "/images/hero-alexandria.jpg",
-  "/images/montaza-palace.jpg",
-  "/images/sunset-sea.jpg",
+  "/images/1678607223.jpg",
+  "/images/15 Reasons Why You Should Visit Alexandria Egypt & Why it's Worth it!.jpeg",
+  "/images/1.jpg",
 ]
 
 const stats = [
@@ -64,12 +64,12 @@ export function Hero() {
                   isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
                 }`}
               >
-                <div className="inline-flex items-center gap-2 bg-secondary/10 backdrop-blur-sm border border-secondary/20 rounded-full px-4 py-2">
+                {/* <div className="inline-flex items-center gap-2 bg-secondary/10 backdrop-blur-sm border border-secondary/20 rounded-full px-4 py-2">
                   <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
                   <span className="text-sm text-secondary/90 font-medium">
                     New: Spring 2026 Tours Now Available
                   </span>
-                </div>
+                </div> */}
 
                 <h1 className="font-serif text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-light text-secondary leading-[1.1] text-balance">
                   Discover the <span className="text-accent italic">Soul</span> of the Mediterranean
@@ -105,7 +105,7 @@ export function Hero() {
               </div>
 
               {/* Quick Search Bar */}
-              <div
+              {/* <div
                 className={`bg-secondary/10 backdrop-blur-md rounded-2xl p-4 border border-secondary/20 transition-all duration-1000 delay-300 ${
                   isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
                 }`}
@@ -133,7 +133,7 @@ export function Hero() {
                     </div>
                   </div>
                 </div>
-              </div>
+              </div> */}
             </div>
 
             {/* Right Side - Featured Card */}
@@ -147,7 +147,7 @@ export function Hero() {
                 <div className="relative bg-secondary/10 backdrop-blur-md rounded-3xl p-6 border border-secondary/20">
                   <div className="aspect-[4/3] relative rounded-2xl overflow-hidden mb-4">
                     <Image
-                      src="/images/qaitbay-citadel.jpg"
+                      src="/images/6.jpg"
                       alt="Qaitbay Citadel"
                       fill
                       className="object-cover hover:scale-105 transition-transform duration-500"
@@ -161,13 +161,13 @@ export function Hero() {
                     Explore the iconic 15th-century fortress built on the ancient Lighthouse site.
                   </p>
                   <div className="flex items-center justify-between">
-                    <div>
+                    {/* <div>
                       <span className="text-accent text-2xl font-semibold">$45</span>
                       <span className="text-secondary/60 text-sm"> /person</span>
-                    </div>
-                    <Button size="sm" className="bg-accent hover:bg-accent/90 text-foreground rounded-full">
+                    </div> */}
+                    {/* <Button size="sm" className="bg-accent hover:bg-accent/90 text-foreground rounded-full">
                       Book Now
-                    </Button>
+                    </Button> */}
                   </div>
                 </div>
               </div>
@@ -178,7 +178,7 @@ export function Hero() {
 
       {/* Stats Bar */}
       <div
-        className={`relative z-10 bg-foreground/80 backdrop-blur-md border-t border-secondary/10 transition-all duration-1000 delay-700 ${
+        className={`relative z-10 bg-primary/45 backdrop-blur-md border-t border-secondary/10 transition-all duration-1000 delay-700 ${
           isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
         }`}
       >

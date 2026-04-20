@@ -44,9 +44,9 @@ export function Footer() {
   }
 
   return (
-    <footer id="contact" className="bg-foreground text-secondary relative overflow-hidden">
+    <footer id="contact" className="bg-primary text-secondary relative overflow-hidden">
       {/* Newsletter Section */}
-      <div className="border-b border-secondary/10">
+      {/* <div className="border-b border-secondary/10">
         <div className="container mx-auto px-4 py-16">
           <AnimatedSection className="max-w-4xl mx-auto text-center">
             <h3 className="font-serif text-3xl md:text-4xl font-light text-secondary mb-4">
@@ -85,7 +85,7 @@ export function Footer() {
             )}
           </AnimatedSection>
         </div>
-      </div>
+      </div> */}
 
       {/* Main Footer */}
       <div className="container mx-auto px-4 py-16">
@@ -93,9 +93,7 @@ export function Footer() {
           {/* Brand */}
           <AnimatedSection className="space-y-6">
             <Link href="/" className="inline-flex items-center gap-2">
-              <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center">
-                <span className="font-serif text-xl font-bold text-accent">A</span>
-              </div>
+             
               <span className="font-serif text-2xl font-semibold text-secondary tracking-wide">
                 Alexplore
               </span>

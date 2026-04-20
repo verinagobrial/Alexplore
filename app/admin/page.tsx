@@ -1,7 +1,8 @@
-import { createClient } from '@/lib/supabase/server'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import Link from 'next/link'
+// app/admin/page.tsx
+import { createServerClient } from '@/lib/supabase/server';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 import { 
   Calendar, 
   DollarSign, 
@@ -9,37 +10,54 @@ import {
   TrendingUp,
   ArrowRight,
   ArrowUpRight,
-  ArrowDownRight,
   Package,
   Mail,
   MessageSquare
-} from 'lucide-react'
+} from 'lucide-react';
+import { Query } from 'appwrite';
 
 export default async function AdminDashboard() {
-  const supabase = await createClient()
+  const { databases } = await createServerClient();
+  
+  const databaseId = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!;
+  const collections = {
+    bookings: process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_BOOKINGS!,
+    profiles: process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_PROFILES!,
+    messages: process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_MESSAGES!,
+    subscribers: process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_SUBSCRIBERS!,
+  };
 
-  // Fetch stats
+  // Fetch stats in parallel
   const [
-    { count: totalBookings },
-    { count: totalUsers },
-    { count: totalMessages },
-    { count: totalSubscribers },
-    { data: recentBookings },
+    bookingsResponse,
+    profilesResponse,
+    messagesResponse,
+    subscribersResponse,
+    recentBookingsResponse,
   ] = await Promise.all([
-    supabase.from('bookings').select('*', { count: 'exact', head: true }),
-    supabase.from('profiles').select('*', { count: 'exact', head: true }),
-    supabase.from('contact_messages').select('*', { count: 'exact', head: true }),
-    supabase.from('newsletter_subscribers').select('*', { count: 'exact', head: true }),
-    supabase.from('bookings').select('*').order('created_at', { ascending: false }).limit(5),
-  ])
+    databases.listDocuments(databaseId, collections.bookings),
+    databases.listDocuments(databaseId, collections.profiles),
+    databases.listDocuments(databaseId, collections.messages),
+    databases.listDocuments(databaseId, collections.subscribers),
+    databases.listDocuments(databaseId, collections.bookings, [
+      Query.orderDesc('$createdAt'),
+      Query.limit(5)
+    ]),
+  ]);
 
-  // Calculate revenue from bookings
-  const { data: bookingsWithTotal } = await supabase
-    .from('bookings')
-    .select('total_price')
-    .eq('status', 'confirmed')
-
-  const totalRevenue = bookingsWithTotal?.reduce((sum, b) => sum + (b.total_price || 0), 0) || 0
+  const totalBookings = bookingsResponse.total;
+  const totalUsers = profilesResponse.total;
+  const totalMessages = messagesResponse.total;
+  const totalSubscribers = subscribersResponse.total;
+  
+  // Calculate revenue from confirmed bookings
+  const confirmedBookings = bookingsResponse.documents.filter(
+    (b: any) => b.status === 'confirmed'
+  );
+  const totalRevenue = confirmedBookings.reduce(
+    (sum: number, b: any) => sum + (b.total_price || 0), 
+    0
+  );
 
   const stats = [
     {
@@ -52,7 +70,7 @@ export default async function AdminDashboard() {
     },
     {
       title: 'Total Bookings',
-      value: totalBookings?.toString() || '0',
+      value: totalBookings.toString(),
       change: '+8%',
       trend: 'up',
       icon: Calendar,
@@ -60,7 +78,7 @@ export default async function AdminDashboard() {
     },
     {
       title: 'Registered Users',
-      value: totalUsers?.toString() || '0',
+      value: totalUsers.toString(),
       change: '+15%',
       trend: 'up',
       icon: Users,
@@ -68,28 +86,37 @@ export default async function AdminDashboard() {
     },
     {
       title: 'Newsletter Subs',
-      value: totalSubscribers?.toString() || '0',
+      value: totalSubscribers.toString(),
       change: '+5%',
       trend: 'up',
       icon: Mail,
       color: 'bg-orange-100 text-orange-600',
     },
-  ]
+  ];
+
+  // Format recent bookings
+  const recentBookings = recentBookingsResponse.documents.map((doc: any) => ({
+    id: doc.$id,
+    package_name: doc.package_name,
+    guest_name: doc.guest_name,
+    guests: doc.guests,
+    total_price: doc.total_price,
+    status: doc.status,
+    created_at: doc.$createdAt,
+  }));
 
   return (
     <div className="space-y-8">
-      {/* Page Header */}
       <div>
         <h1 className="text-3xl font-serif font-bold text-foreground">Dashboard</h1>
         <p className="text-muted-foreground mt-1">
-          {"Welcome back! Here's what's happening with Alexplore."}
+          Welcome back! Here's what's happening with Alexplore.
         </p>
       </div>
 
-      {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat) => {
-          const Icon = stat.icon
+          const Icon = stat.icon;
           return (
             <Card key={stat.title}>
               <CardContent className="pt-6">
@@ -103,7 +130,7 @@ export default async function AdminDashboard() {
                     {stat.trend === 'up' ? (
                       <ArrowUpRight className="h-4 w-4" />
                     ) : (
-                      <ArrowDownRight className="h-4 w-4" />
+                      <ArrowUpRight className="h-4 w-4" />
                     )}
                     {stat.change}
                   </div>
@@ -114,7 +141,7 @@ export default async function AdminDashboard() {
                 </div>
               </CardContent>
             </Card>
-          )
+          );
         })}
       </div>
 
@@ -133,9 +160,9 @@ export default async function AdminDashboard() {
             </Link>
           </CardHeader>
           <CardContent>
-            {recentBookings && recentBookings.length > 0 ? (
+            {recentBookings.length > 0 ? (
               <div className="space-y-4">
-                {recentBookings.map((booking) => (
+                {recentBookings.map((booking: any) => (
                   <div
                     key={booking.id}
                     className="flex items-center justify-between p-4 bg-muted/50 rounded-lg"
@@ -197,7 +224,7 @@ export default async function AdminDashboard() {
               <Button variant="outline" className="w-full h-auto py-4 flex-col gap-2 relative">
                 <MessageSquare className="h-6 w-6 text-primary" />
                 <span>Messages</span>
-                {(totalMessages || 0) > 0 && (
+                {totalMessages > 0 && (
                   <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
                     {totalMessages}
                   </span>
@@ -214,5 +241,5 @@ export default async function AdminDashboard() {
         </Card>
       </div>
     </div>
-  )
+  );
 }

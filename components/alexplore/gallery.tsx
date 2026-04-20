@@ -7,17 +7,18 @@ import { AnimatedSection } from "./animated-section"
 import { Button } from "@/components/ui/button"
 
 const galleryImages = [
-  { src: "/images/qaitbay-citadel.jpg", alt: "Qaitbay Citadel", category: "Historical" },
-  { src: "/images/montaza-palace.jpg", alt: "Montaza Palace", category: "Palace" },
-  { src: "/images/mosque.jpg", alt: "Abu al-Abbas al-Mursi Mosque", category: "Religious" },
-  { src: "/images/bibliotheca.jpg", alt: "Bibliotheca Alexandrina", category: "Cultural" },
-  { src: "/images/corniche.jpg", alt: "Alexandria Corniche", category: "Coastal" },
-  { src: "/images/sunset-sea.jpg", alt: "Mediterranean Sunset", category: "Nature" },
-  { src: "/images/gallery-1.jpg", alt: "Roman Amphitheater", category: "Historical" },
-  { src: "/images/gallery-2.jpg", alt: "Local Cuisine", category: "Food" },
-  { src: "/images/hero-alexandria.jpg", alt: "Alexandria Skyline", category: "Coastal" },
-  { src: "/images/hotel-1.jpg", alt: "Luxury Resort", category: "Hotels" },
-  { src: "/images/hotel-2.jpg", alt: "Beachfront Hotel", category: "Hotels" },
+  { src: "/images/5.jpg", alt: "Qaitbay Citadel", category: "Historical" },
+  { src: "/images/7.jpg", alt: "Montaza Palace", category: "Palace" },
+  { src: "/images/9.jpg", alt: "Abu al-Abbas al-Mursi Mosque", category: "Religious" },
+  { src: "/images/4.jpg", alt: "Bibliotheca Alexandrina", category: "Cultural" },
+  { src: "/images/Alexandria _ Egypt.jpeg", alt: "Alexandria Corniche", category: "Coastal" },
+  { src: "/images/b94630d732490f4fa15a61d13a2651d3.jpg", alt: "Mediterranean Sunset", category: "Nature" },
+  { src: "/images/bridge.jpeg", alt: "Roman Amphitheater", category: "Historical" },
+  { src: "/images/b1e244e6-8b55-49d8-b849-833330ed6af6.jpeg", alt: "Local Cuisine", category: "Food" },
+  { src: "/images/Alexandria - City Branding.jpg", alt: "Alexandria Skyline", category: "Coastal" },
+  { src: "/images/a7fb252b-d905-4576-9320-209cc1d166fa.jpeg", alt: "Luxury Resort", category: "Hotels" },
+  { src: "/images/Alexandria Library  Alexandria - Egypt.jpeg", alt: "Beachfront Hotel", category: "Hotels" },
+  { src: "/images/Qaitbay Fort2.jpeg", alt: "Beachfront Hotel", category: "Hotels" },
 ]
 
 export function Gallery() {
@@ -52,7 +53,7 @@ export function Gallery() {
   })
 
   return (
-    <section className="py-24 lg:py-32 bg-secondary/30 overflow-hidden">
+    <section className="py-24 lg:py-32 bg-secondary/50 overflow-hidden">
       <div className="container mx-auto px-4">
         {/* Section Header */}
         <AnimatedSection className="text-center max-w-3xl mx-auto mb-12">

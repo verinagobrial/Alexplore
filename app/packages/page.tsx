@@ -33,31 +33,32 @@ export default function PackagesPage() {
     <main className="min-h-screen">
       <Header />
       
-      {/* Hero Section */}
-      <section className="relative py-20 bg-primary text-primary-foreground">
-        <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto text-center">
-            <h1 className="text-4xl md:text-5xl font-serif font-bold mb-4">
-              Explore Our Travel Packages
-            </h1>
-            <p className="text-lg opacity-90 mb-8">
-              Discover handcrafted experiences that bring Alexandria to life. From ancient wonders to modern luxury.
-            </p>
-            
-            {/* Search Bar */}
-            <div className="relative max-w-xl mx-auto">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-              <Input
-                type="text"
-                placeholder="Search packages..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-12 h-14 text-lg bg-white text-foreground rounded-full"
-              />
-            </div>
-          </div>
-        </div>
-      </section>
+     {/* Hero Section */}
+     <section className="relative py-20 overflow-hidden">
+  {/* Image Background */}
+  <div 
+    className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
+    style={{ backgroundImage: "url('/images/image-1773580378733.png')" }}
+  />
+  
+  {/* Blurred Overlay */}
+  <div className="absolute inset-0 bg-primary/60 backdrop-blur-sm z-0" />
+  
+  {/* Optional: Animated gradient overlay */}
+  <div className="absolute inset-0 bg-gradient-to-r from-primary/40 via-primary/20 to-primary/40 z-0" />
+
+  {/* Content */}
+  <div className="container mx-auto px-4 relative z-10">
+    <div className="max-w-3xl mx-auto text-center text-primary-foreground">
+      <h1 className="text-4xl md:text-5xl font-serif font-bold mb-4 animate-fade-in text-secondary">
+        Explore Our Travel Packages
+      </h1>
+      <p className="text-lg opacity-90 mb-8 animate-slide-up">
+       The Soul of the Mediterranean in Your Hands.
+      </p>
+    </div>
+  </div>
+</section>
 
       {/* Filters & Packages */}
       <section className="py-16 bg-background">

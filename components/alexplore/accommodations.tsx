@@ -5,6 +5,7 @@ import { Star, MapPin, ArrowRight, Wifi, Car, Coffee, Waves } from "lucide-react
 import { Button } from "@/components/ui/button"
 import { AnimatedSection } from "./animated-section"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 
 const amenityIcons: Record<string, React.ComponentType<{ className?: string }>> = {
   wifi: Wifi,
@@ -15,6 +16,7 @@ const amenityIcons: Record<string, React.ComponentType<{ className?: string }>> 
 
 const hotels = [
   {
+    id: "four-seasons-san-stefano",
     name: "Four Seasons San Stefano",
     location: "San Stefano, Alexandria",
     rating: 5,
@@ -25,6 +27,7 @@ const hotels = [
     reviews: 1247,
   },
   {
+    id: "rixos-montaza",
     name: "Rixos Montaza",
     location: "Montaza, Alexandria",
     rating: 5,
@@ -35,6 +38,7 @@ const hotels = [
     reviews: 892,
   },
   {
+    id: "hilton-alexandria-corniche",
     name: "Hilton Alexandria Corniche",
     location: "Corniche Road, Alexandria",
     rating: 4,
@@ -47,10 +51,19 @@ const hotels = [
 ]
 
 export function Accommodations() {
+  const router = useRouter()
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
 
+  const handleViewAllHotels = () => {
+    router.push("/accommodations")
+  }
+
+  const handleHotelClick = (hotelId: string) => {
+    router.push(`/accommodations/${hotelId}`)
+  }
+
   return (
-    <section className="py-24 lg:py-32 bg-secondary/30 overflow-hidden">
+    <section className="py-24 lg:py-32 bg-secondary/50 overflow-hidden">
       <div className="container mx-auto px-4">
         {/* Section Header */}
         <AnimatedSection className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
@@ -69,6 +82,7 @@ export function Accommodations() {
           <Button 
             variant="outline" 
             size="lg"
+            onClick={handleViewAllHotels}
             className="group border-primary text-primary hover:bg-primary hover:text-primary-foreground rounded-full w-fit"
           >
             View All Hotels
@@ -81,9 +95,10 @@ export function Accommodations() {
           {hotels.map((hotel, index) => (
             <AnimatedSection key={index} animation="fade-up" delay={index * 150}>
               <div
-                className="group bg-card rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 h-full flex flex-col"
+                className="group bg-card rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 h-full flex flex-col cursor-pointer"
                 onMouseEnter={() => setHoveredIndex(index)}
                 onMouseLeave={() => setHoveredIndex(null)}
+                onClick={() => handleHotelClick(hotel.id)}
               >
                 <div className="aspect-[16/10] relative overflow-hidden">
                   <Image
@@ -143,12 +158,16 @@ export function Accommodations() {
                     </span>
                   </div>
 
-                  <Button 
+                  {/* <Button 
                     className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-full group/btn hover:scale-[1.02] transition-all"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleHotelClick(hotel.id)
+                    }}
                   >
                     View Details
                     <ArrowRight className="ml-2 h-4 w-4 group-hover/btn:translate-x-1 transition-transform" />
-                  </Button>
+                  </Button> */}
                 </div>
               </div>
             </AnimatedSection>

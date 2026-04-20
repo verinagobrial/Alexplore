@@ -5,7 +5,7 @@ import { Heritage } from "@/components/alexplore/heritage"
 import { Activities } from "@/components/alexplore/activities"
 import { Accommodations } from "@/components/alexplore/accommodations"
 import { DiscountBanner } from "@/components/alexplore/discount-banner"
-import { PackageSearch } from "@/components/alexplore/package-search"
+// import { PackageSearch } from "@/components/alexplore/package-search"
 import { PopularPackages } from "@/components/alexplore/popular-packages"
 import { Testimonials } from "@/components/alexplore/testimonials"
 import { Gallery } from "@/components/alexplore/gallery"
@@ -21,7 +21,7 @@ export default function Home() {
       <Activities />
       <Accommodations />
       <DiscountBanner />
-      <PackageSearch />
+      {/* <PackageSearch /> */}
       <PopularPackages />
       <Testimonials />
       <Gallery />

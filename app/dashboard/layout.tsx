@@ -1,6 +1,8 @@
+// app/dashboard/layout.tsx
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { DashboardNav } from '@/components/dashboard/nav'
+import { Header } from '@/components/alexplore/header'  
+import { Footer } from '@/components/alexplore/footer'
 
 export default async function DashboardLayout({
   children,
@@ -14,12 +16,10 @@ export default async function DashboardLayout({
     redirect('/auth/login')
   }
 
+  // Remove DashboardNav - your page already has its own header
   return (
     <div className="min-h-screen bg-background">
-      <DashboardNav user={user} />
-      <main className="container mx-auto px-4 py-8">
-        {children}
-      </main>
+      {children}
     </div>
   )
 }

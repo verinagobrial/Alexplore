@@ -1,9 +1,19 @@
+// components/Header.tsx
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
+
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Menu, X, ChevronDown, Phone, Mail, User, LogOut, LayoutDashboard, Settings } from "lucide-react"
+import {
+  Menu,
+  X,
+  ChevronDown,
+  User,
+  LogOut,
+  LayoutDashboard,
+  Settings
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -14,7 +24,22 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { createClient } from "@/lib/supabase/client"
-import type { User as SupabaseUser } from "@supabase/supabase-js"
+
+// Define a local User type for our app (don't import from supabase)
+interface AppUser {
+  id: string;
+  email: string;
+  name?: string;
+  phone?: string;
+  emailVerified: boolean;
+  created_at: string;
+  user_metadata: {
+    first_name?: string;
+    last_name?: string;
+    is_admin?: boolean;
+    phone?: string;
+  };
+}
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -25,10 +50,20 @@ const navLinks = [
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
-  const [user, setUser] = useState<SupabaseUser | null>(null)
+  const [user, setUser] = useState<AppUser | null>(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
+  
+  // Create supabase client - stable reference
+  const supabase = useRef(createClient()).current
+  
+  // Use refs for router to avoid dependency issues
+  const routerRef = useRef(router)
+  useEffect(() => {
+    routerRef.current = router
+  }, [router])
 
+  // Handle scroll effect - stable dependencies
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 50)
@@ -37,31 +72,128 @@ export function Header() {
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
+  // Prevent body scroll when mobile menu is open
   useEffect(() => {
-    const supabase = createClient()
+    if (mobileMenuOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [mobileMenuOpen])
+
+  // Auth state management - Supabase version with real-time subscription
+  useEffect(() => {
+    let isMounted = true
+
+    // Get initial session
+    const getInitialUser = async () => {
+      try {
+        const { data: { user: currentUser }, error } = await supabase.auth.getUser()
+        
+        if (error) throw error
+        
+        if (isMounted && currentUser) {
+          // Format Supabase user to our AppUser type
+          const formattedUser: AppUser = {
+            id: currentUser.id,
+            email: currentUser.email!,
+            name: currentUser.user_metadata?.full_name || currentUser.user_metadata?.name,
+            phone: currentUser.user_metadata?.phone,
+            emailVerified: currentUser.email_confirmed_at ? true : false,
+            created_at: currentUser.created_at,
+            user_metadata: {
+              first_name: currentUser.user_metadata?.first_name || '',
+              last_name: currentUser.user_metadata?.last_name || '',
+              is_admin: currentUser.user_metadata?.is_admin || false,
+              phone: currentUser.user_metadata?.phone,
+            }
+          }
+          setUser(formattedUser)
+        } else {
+          setUser(null)
+        }
+      } catch (error) {
+        console.log("No user session found")
+        if (isMounted) {
+          setUser(null)
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false)
+        }
+      }
+    }
+
+    getInitialUser()
+
+    // Set up auth state change listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (!isMounted) return
+        
+        console.log("Auth state changed:", event)
+        
+        if (event === 'SIGNED_IN' && session?.user) {
+          const formattedUser: AppUser = {
+            id: session.user.id,
+            email: session.user.email!,
+            name: session.user.user_metadata?.full_name || session.user.user_metadata?.name,
+            phone: session.user.user_metadata?.phone,
+            emailVerified: session.user.email_confirmed_at ? true : false,
+            created_at: session.user.created_at,
+            user_metadata: {
+              first_name: session.user.user_metadata?.first_name || '',
+              last_name: session.user.user_metadata?.last_name || '',
+              is_admin: session.user.user_metadata?.is_admin || false,
+              phone: session.user.user_metadata?.phone,
+            }
+          }
+          setUser(formattedUser)
+        } else if (event === 'SIGNED_OUT') {
+          setUser(null)
+        } else if (event === 'USER_UPDATED' && session?.user) {
+          const formattedUser: AppUser = {
+            id: session.user.id,
+            email: session.user.email!,
+            name: session.user.user_metadata?.full_name || session.user.user_metadata?.name,
+            phone: session.user.user_metadata?.phone,
+            emailVerified: session.user.email_confirmed_at ? true : false,
+            created_at: session.user.created_at,
+            user_metadata: {
+              first_name: session.user.user_metadata?.first_name || '',
+              last_name: session.user.user_metadata?.last_name || '',
+              is_admin: session.user.user_metadata?.is_admin || false,
+              phone: session.user.user_metadata?.phone,
+            }
+          }
+          setUser(formattedUser)
+        }
+        
+        setLoading(false)
+      }
+    )
+
+    // Refresh user when tab becomes visible
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        getInitialUser()
+      }
+    }
     
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setUser(user)
-      setLoading(false)
-    })
+    document.addEventListener('visibilitychange', handleVisibilityChange)
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-    })
+    return () => {
+      isMounted = false
+      subscription.unsubscribe()
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [supabase])
 
-    return () => subscription.unsubscribe()
-  }, [])
-
-  async function handleSignOut() {
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    setUser(null)
-    router.push("/")
-    router.refresh()
-  }
-
-  // Fixed: Add proper null checks for initials
-  const getInitials = () => {
+  // Helper function to get user initials - memoized
+  const getInitials = useCallback(() => {
     if (!user) return 'U'
     const firstName = user.user_metadata?.first_name
     if (firstName && typeof firstName === 'string' && firstName[0]) {
@@ -72,54 +204,122 @@ export function Header() {
       return email[0].toUpperCase()
     }
     return 'U'
-  }
-  
+  }, [user])
+
+  // Helper function to get display name - memoized
+  const getDisplayName = useCallback(() => {
+    if (user?.user_metadata?.first_name) {
+      return user.user_metadata.first_name
+    }
+    if (user?.name) {
+      return user.name
+    }
+    return user?.email?.split('@')[0] || 'Account'
+  }, [user])
+
+  // Sign out handler - stable
+  const handleSignOut = useCallback(async () => {
+    try {
+      await supabase.auth.signOut()
+      setUser(null)
+      setMobileMenuOpen(false)
+      routerRef.current.push("/")
+      routerRef.current.refresh()
+    } catch (error) {
+      console.error("Error signing out:", error)
+    }
+  }, [supabase])
+
   const initials = getInitials()
   const isAdmin = user?.user_metadata?.is_admin === true
-  const displayName = user?.user_metadata?.first_name || user?.email?.split('@')[0] || 'Account'
+  const displayName = getDisplayName()
+
+  // User Menu Component
+  const UserMenu = useCallback(() => (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button 
+          variant="ghost" 
+          className={`rounded-full gap-2 transition-colors ${
+            scrolled 
+              ? "text-secondary hover:text-primary" 
+              : "text-secondary hover:bg-secondary/10"
+          }`}
+        >
+          <Avatar className="h-8 w-8">
+            <AvatarFallback className="bg-secondary text-secondary-foreground text-sm font-semibold">
+              {initials}
+            </AvatarFallback>
+          </Avatar>
+          <span className="hidden xl:inline">{displayName}</span>
+          <ChevronDown className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56 bg-white border-gray-200">
+        <div className="px-3 py-2">
+          <p className="text-sm font-medium text-gray-900">{displayName}</p>
+          <p className="text-xs text-gray-500">{user?.email || ''}</p>
+        </div>
+        <DropdownMenuSeparator className="bg-gray-100" />
+        <DropdownMenuItem asChild className="cursor-pointer hover:bg-gray-100">
+          <Link href="/dashboard" className="text-gray-700">
+            <LayoutDashboard className="mr-2 h-4 w-4" />
+            Dashboard
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild className="cursor-pointer hover:bg-gray-100">
+          <Link href="/dashboard/settings" className="text-gray-700">
+            <Settings className="mr-2 h-4 w-4" />
+            Settings
+          </Link>
+        </DropdownMenuItem>
+        {isAdmin && (
+          <>
+            <DropdownMenuSeparator className="bg-gray-100" />
+            <DropdownMenuItem asChild className="cursor-pointer hover:bg-gray-100">
+              <Link href="/admin" className="text-primary">
+                <User className="mr-2 h-4 w-4" />
+                Admin Panel
+              </Link>
+            </DropdownMenuItem>
+          </>
+        )}
+        <DropdownMenuSeparator className="bg-gray-100" />
+        <DropdownMenuItem onClick={handleSignOut} className="text-red-600 cursor-pointer hover:bg-gray-100">
+          <LogOut className="mr-2 h-4 w-4" />
+          Sign Out
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  ), [scrolled, initials, displayName, user, isAdmin, handleSignOut])
 
   return (
     <>
-      {/* Top Bar */}
-      {/* <div className={`fixed top-0 left-0 right-0 z-50 bg-primary text-primary-foreground transition-all duration-300 ${scrolled ? "h-0 overflow-hidden opacity-0" : "h-10 opacity-100"}`}>
-        <div className="container mx-auto px-4 h-full flex items-center justify-between text-sm">
-          <div className="flex items-center gap-6">
-            <a href="mailto:hello@alexplore.com" className="flex items-center gap-2 hover:text-accent transition-colors">
-              <Mail className="h-4 w-4" />
-              <span className="hidden sm:inline">hello@alexplore.com</span>
-            </a>
-            <a href="tel:+20312345677" className="flex items-center gap-2 hover:text-accent transition-colors">
-              <Phone className="h-4 w-4" />
-              <span className="hidden sm:inline">+20 3 123 4567</span>
-            </a>
-          </div>
-          <div className="flex items-center gap-4">
-            <span className="hidden md:inline text-primary-foreground/80">Book now & get 20% off!</span>
-          </div>
-        </div>
-      </div> */}
-
       {/* Main Header */}
-      <header className={`fixed left-0 right-0 z-50 transition-all duration-500 ${scrolled ? "top-0 bg-primary backdrop-blur-md shadow-lg border-b border-border/50" : "top-5 bg-transparent"}`}>
+      <header className={`fixed left-0 right-0 z-50 transition-all duration-500 ${
+        scrolled 
+          ? "top-0 bg-primary backdrop-blur-md shadow-lg" 
+          : "top-0 bg-transparent"
+      }`}>
         <div className="container mx-auto px-4">
-          <div className={`flex items-center justify-between transition-all duration-300 ${scrolled ? "h-16" : "h-20"}`}>
+          <div className={`flex items-center justify-between transition-all duration-300 ${
+            scrolled ? "h-16" : "h-20"
+          }`}>
             {/* Logo */}
-<Link href="/" className="flex items-center gap-2 group">
-  <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 overflow-hidden ${
-    scrolled ? "bg-primary" : "bg-accent/20 backdrop-blur-sm"
-  }`}>
-    <img 
-      src="/alexandre-logo.png" 
-      alt="Alexplore Logo" 
-      className="w-full h-full object-cover"
-    />
-  </div>
-  <span className={`font-serif text-2xl font-semibold tracking-wide transition-colors ${
-    scrolled ? "text-secondary" : "text-secondary"
-  }`}>
-    Alexplore
-  </span>
-</Link>
+            <Link href="/" className="flex items-center gap-2 group z-50">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 overflow-hidden ${
+                scrolled ? "bg-primary" : "bg-accent/20 backdrop-blur-sm"
+              }`}>
+                <img 
+                  src="/alexandre-logo.png" 
+                  alt="Alexplore Logo" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <span className={`font-serif text-2xl font-semibold tracking-wide transition-colors text-secondary`}>
+                Alexplore
+              </span>
+            </Link>
 
             {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center gap-1">
@@ -127,115 +327,65 @@ export function Header() {
                 <Link 
                   key={link.href}
                   href={link.href} 
-                  className={`px-4 py-2 text-sm font-medium rounded-full transition-all duration-300 ${
-                    scrolled 
-                      ? "text-secondary  hover:bg-secondary/10" 
-                      : "text-secondary  hover:bg-secondary/10"
-                  }`}
+                  className={`px-4 py-2 text-sm font-medium rounded-full transition-all duration-300 text-secondary hover:bg-secondary/10`}
                 >
                   {link.label}
                 </Link>
               ))}
               <DropdownMenu>
-                <DropdownMenuTrigger className={`flex items-center gap-1 px-4 py-2 text-sm font-medium rounded-full transition-all duration-300 ${scrolled ? "text-secondary  hover:bg-secondary/10" : "text-secondary/80 hover:text-secondary hover:bg-secondary/10"}`}>
+                <DropdownMenuTrigger className={`flex items-center gap-1 px-4 py-2 text-sm font-medium rounded-full transition-all duration-300 text-secondary hover:bg-secondary/10`}>
                   More <ChevronDown className="h-4 w-4" />
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem asChild>
-                    <Link href="/#activities">Activities</Link>
+                <DropdownMenuContent align="end" className="w-48 bg-white border-gray-200">
+                  <DropdownMenuItem asChild className="cursor-pointer hover:bg-gray-100">
+                    <Link href="/#activities" className="text-gray-700">Activities</Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/#accommodations">Accommodations</Link>
+                  <DropdownMenuItem asChild className="cursor-pointer hover:bg-gray-100">
+                    <Link href="/#accommodations" className="text-gray-700">Accommodations</Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/#gallery">Gallery</Link>
+                  <DropdownMenuItem asChild className="cursor-pointer hover:bg-gray-100">
+                    <Link href="/#gallery" className="text-gray-700">Gallery</Link>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </nav>
 
-            {/* Desktop CTA */}
+            {/* Desktop CTA - Integrated with auth state */}
             <div className="hidden lg:flex items-center gap-3">
               {loading ? (
                 <div className="w-24 h-10 bg-muted animate-pulse rounded-full" />
               ) : user ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
+                <UserMenu />
+              ) : (
+                <>
+                  <Link href="/auth/login">
                     <Button 
                       variant="ghost" 
-                      className={`rounded-full gap-2 transition-colors ${scrolled ? "text-foreground hover:text-primary" : "text-secondary hover:bg-secondary/10"}`}
+                      className="rounded-full transition-colors text-secondary hover:text-accent hover:bg-secondary/10"
                     >
-                      <Avatar className="h-8 w-8">
-                        <AvatarFallback className="bg-secondary text-secondary-foreground text-sm font-semibold">
-                          {initials}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="hidden xl:inline">{displayName}</span>
-                      <ChevronDown className="h-4 w-4" />
+                      Sign In
                     </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
-                    <div className="px-3 py-2">
-                      <p className="text-sm font-medium">{displayName}</p>
-                      <p className="text-xs text-muted-foreground">{user.email || ''}</p>
-                    </div>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link href="/dashboard" className="cursor-pointer">
-                        <LayoutDashboard className="mr-2 h-4 w-4" />
-                        Dashboard
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/dashboard/settings" className="cursor-pointer">
-                        <Settings className="mr-2 h-4 w-4" />
-                        Settings
-                      </Link>
-                    </DropdownMenuItem>
-                    {isAdmin && (
-                      <>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem asChild>
-                          <Link href="/admin" className="cursor-pointer text-primary">
-                            <User className="mr-2 h-4 w-4" />
-                            Admin Panel
-                          </Link>
-                        </DropdownMenuItem>
-                      </>
-                    )}
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleSignOut} className="text-red-600 cursor-pointer">
-                      <LogOut className="mr-2 h-4 w-4" />
-                      Sign Out
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : (
-                <Link href="/auth/login">
-                  <Button 
-                    variant="ghost" 
-                    className={`rounded-full transition-colors ${scrolled ? "text-foreground hover:text-primary" : "text-secondary hover:text-accent hover:bg-secondary/10"}`}
-                  >
-                    Sign In
-                  </Button>
-                </Link>
+                  </Link>
+                  <Link href="/auth/sign-up">
+                    <Button 
+                      className={`rounded-full px-6 transition-all hover:scale-105 ${
+                        scrolled 
+                          ? "bg-secondary hover:bg-secondary/90 text-secondary-foreground" 
+                          : "bg-accent hover:bg-accent/90 text-foreground shadow-lg shadow-accent/25"
+                      }`}
+                    >
+                      Book Now
+                    </Button>
+                  </Link>
+                </>
               )}
-              <Link href="/packages">
-                <Button 
-                  className={`rounded-full px-6 transition-all hover:scale-105 ${
-                    scrolled 
-                      ? "bg-secondary hover:bg-secondary/90 text-secondary-foreground" 
-                      : "bg-accent hover:bg-accent/90 text-foreground shadow-lg shadow-accent/25"
-                  }`}
-                >
-                  Book Now
-                </Button>
-              </Link>
             </div>
 
             {/* Mobile Menu Button */}
             <button
-              className={`lg:hidden p-2 rounded-full transition-colors ${scrolled ? "text-foreground hover:bg-muted" : "text-secondary hover:bg-secondary/10"}`}
+              className={`lg:hidden p-2 rounded-full transition-colors z-50 ${
+                scrolled ? "text-secondary hover:bg-muted" : "text-secondary hover:bg-secondary/10"
+              }`}
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label="Toggle menu"
             >
@@ -247,100 +397,143 @@ export function Header() {
             </button>
           </div>
         </div>
+      </header>
 
-        {/* Mobile Menu */}
-        <div className={`lg:hidden fixed inset-0 top-[calc(4rem+2.5rem)] bg-background transition-all duration-300 ${mobileMenuOpen ? "opacity-100 visible" : "opacity-0 invisible"}`}>
-          <div className={`transition-all duration-300 ${mobileMenuOpen ? "translate-y-0" : "-translate-y-4"}`}>
-            <nav className="container mx-auto px-4 py-8 flex flex-col gap-2">
-              {navLinks.map((link, index) => (
+      {/* Mobile Menu - ALWAYS WHITE BACKGROUND, independent of scroll */}
+      <div 
+        className={`lg:hidden fixed inset-0 z-40 transition-all duration-300 ${
+          mobileMenuOpen ? "opacity-100 visible" : "opacity-0 invisible pointer-events-none"
+        }`}
+        style={{ top: scrolled ? '64px' : '80px' }}
+      >
+        {/* Backdrop overlay - dark with opacity */}
+        <div 
+          className="absolute inset-0 bg-black/50 transition-opacity duration-300"
+          onClick={() => setMobileMenuOpen(false)}
+          style={{ opacity: mobileMenuOpen ? 1 : 0 }}
+        />
+        
+        {/* Menu panel - ALWAYS WHITE BACKGROUND */}
+        <div 
+          className={`absolute right-0 top-0 h-full w-full sm:w-96 bg-white shadow-2xl transition-transform duration-300 ease-out ${
+            mobileMenuOpen ? "translate-x-0" : "translate-x-full"
+          }`}
+        >
+          <div className="flex flex-col h-full overflow-y-auto">
+            <div className="flex-1 py-8 px-6">
+              <nav className="flex flex-col gap-2">
+                {/* Main Navigation Links */}
+                {navLinks.map((link) => (
+                  <Link 
+                    key={link.href}
+                    href={link.href} 
+                    className="px-4 py-3 text-lg font-medium rounded-xl text-gray-800 hover:text-yellow-600 hover:bg-yellow-50 transition-all"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+                
+                <div className="border-t border-gray-200 my-4" />
+                
+                {/* More Links */}
                 <Link 
-                  key={link.href}
-                  href={link.href} 
-                  className="px-4 py-3 text-lg font-medium rounded-xl text-foreground hover:text-primary hover:bg-primary/5 transition-all"
+                  href="/#activities"
+                  className="px-4 py-3 text-lg font-medium text-gray-800 hover:text-yellow-600 hover:bg-yellow-50 rounded-xl transition-all"
                   onClick={() => setMobileMenuOpen(false)}
-                  style={{ animationDelay: `${index * 50}ms` }}
                 >
-                  {link.label}
+                  Activities
                 </Link>
-              ))}
-              
-              <div className="border-t border-border my-4" />
-              
-              <Link 
-                href="/#activities"
-                className="px-4 py-3 text-lg font-medium text-foreground hover:text-primary hover:bg-primary/5 rounded-xl transition-all"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Activities
-              </Link>
-              <Link 
-                href="/#accommodations"
-                className="px-4 py-3 text-lg font-medium text-foreground hover:text-primary hover:bg-primary/5 rounded-xl transition-all"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Accommodations
-              </Link>
-              <Link 
-                href="/#gallery"
-                className="px-4 py-3 text-lg font-medium text-foreground hover:text-primary hover:bg-primary/5 rounded-xl transition-all"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Gallery
-              </Link>
+                <Link 
+                  href="/#accommodations"
+                  className="px-4 py-3 text-lg font-medium text-gray-800 hover:text-yellow-600 hover:bg-yellow-50 rounded-xl transition-all"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Accommodations
+                </Link>
+                <Link 
+                  href="/#gallery"
+                  className="px-4 py-3 text-lg font-medium text-gray-800 hover:text-yellow-600 hover:bg-yellow-50 rounded-xl transition-all"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Gallery
+                </Link>
 
-              <div className="mt-6 flex flex-col gap-3">
-                {user ? (
-                  <>
-                    <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
-                      <Button variant="outline" className="w-full rounded-full py-6 text-lg">
-                        <LayoutDashboard className="mr-2 h-5 w-5" />
-                        Dashboard
-                      </Button>
-                    </Link>
-                    {isAdmin && (
-                      <Link href="/admin" onClick={() => setMobileMenuOpen(false)}>
-                        <Button variant="outline" className="w-full rounded-full py-6 text-lg text-primary">
-                          <User className="mr-2 h-5 w-5" />
-                          Admin Panel
+                <div className="mt-6 flex flex-col gap-3">
+                  {loading ? (
+                    <div className="w-full h-12 bg-gray-100 animate-pulse rounded-full" />
+                  ) : user ? (
+                    <>
+                      {/* User Info Section */}
+                      <div className="px-4 py-3 mb-2 bg-yellow-50 rounded-xl">
+                        <p className="font-medium text-gray-900">{displayName}</p>
+                        <p className="text-sm text-gray-500 break-all">{user.email}</p>
+                      </div>
+                      
+                      {/* Dashboard Links */}
+                      <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
+                        <Button variant="outline" className="w-full rounded-full py-6 text-lg border-gray-200 hover:border-yellow-500 hover:bg-yellow-50">
+                          <LayoutDashboard className="mr-2 h-5 w-5" />
+                          Dashboard
                         </Button>
                       </Link>
-                    )}
-                    <Button 
-                      variant="ghost" 
-                      className="w-full rounded-full py-6 text-lg text-red-600"
-                      onClick={() => {
-                        handleSignOut()
-                        setMobileMenuOpen(false)
-                      }}
-                    >
-                      <LogOut className="mr-2 h-5 w-5" />
-                      Sign Out
+                      <Link href="/dashboard/settings" onClick={() => setMobileMenuOpen(false)}>
+                        <Button variant="outline" className="w-full rounded-full py-6 text-lg border-gray-200 hover:border-yellow-500 hover:bg-yellow-50">
+                          <Settings className="mr-2 h-5 w-5" />
+                          Settings
+                        </Button>
+                      </Link>
+                      
+                      {isAdmin && (
+                        <Link href="/admin" onClick={() => setMobileMenuOpen(false)}>
+                          <Button variant="outline" className="w-full rounded-full py-6 text-lg text-yellow-600 border-yellow-500 hover:bg-yellow-50">
+                            <User className="mr-2 h-5 w-5" />
+                            Admin Panel
+                          </Button>
+                        </Link>
+                      )}
+                      
+                      {/* Sign Out Button */}
+                      <Button 
+                        variant="ghost" 
+                        className="w-full rounded-full py-6 text-lg text-red-600 hover:bg-red-50 hover:text-red-700"
+                        onClick={() => {
+                          handleSignOut()
+                          setMobileMenuOpen(false)
+                        }}
+                      >
+                        <LogOut className="mr-2 h-5 w-5" />
+                        Sign Out
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      {/* Auth Buttons for non-authenticated users */}
+                      <Link href="/auth/login" onClick={() => setMobileMenuOpen(false)}>
+                        <Button variant="outline" className="w-full rounded-full py-6 text-lg border-gray-200 hover:border-yellow-500 hover:bg-yellow-50">
+                          Sign In
+                        </Button>
+                      </Link>
+                      <Link href="/auth/sign-up" onClick={() => setMobileMenuOpen(false)}>
+                        <Button className="w-full bg-yellow-500 hover:bg-yellow-600 text-white rounded-full py-6 text-lg">
+                          Create Account
+                        </Button>
+                      </Link>
+                    </>
+                  )}
+                  
+                  {/* Book Now Button - Always visible */}
+                  <Link href="/packages" onClick={() => setMobileMenuOpen(false)}>
+                    <Button className="w-full bg-[#326964] hover:bg-[#28544f] text-white rounded-full py-6 text-lg mt-2">
+                      Book Now
                     </Button>
-                  </>
-                ) : (
-                  <>
-                    <Link href="/auth/login" onClick={() => setMobileMenuOpen(false)}>
-                      <Button variant="outline" className="w-full rounded-full py-6 text-lg">
-                        Sign In
-                      </Button>
-                    </Link>
-                    <Link href="/auth/sign-up" onClick={() => setMobileMenuOpen(false)}>
-                      <Button className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground rounded-full py-6 text-lg">
-                        Create Account
-                      </Button>
-                    </Link>
-                  </>
-                )}
-                <Link href="/packages" onClick={() => setMobileMenuOpen(false)}>
-                  <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-full py-6 text-lg">
-                    Book Now
-                  </Button>
-                </Link>
-              </div>
-            </nav>
+                  </Link>
+                </div>
+              </nav>
+            </div>
           </div>
         </div>
-      </header>
+      </div>
     </>
   )
 }

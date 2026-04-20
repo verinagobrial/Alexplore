@@ -46,14 +46,16 @@ export function DiscountBanner() {
     <section className="relative py-24 lg:py-32 overflow-hidden">
       {/* Background Image */}
       <div className="absolute inset-0 z-0">
-        <Image
-          src="/images/sunset-sea.jpg"
-          alt="Mediterranean sunset"
-          fill
-          className="object-cover animate-slow-zoom"
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-foreground/80 via-foreground/60 to-foreground/80" />
-      </div>
+  <video 
+    src="/images/From Main Klickpin CF- Pinterest Video - 6VyAL4JrC.mp4"
+    autoPlay
+    loop
+    muted
+    playsInline
+    className="object-cover w-full h-full"
+  />
+  <div className="absolute inset-0 bg-gradient-to-r from-foreground/80 via-foreground/60 to-foreground/80" />
+</div>
 
       {/* Animated particles */}
       <div className="absolute inset-0 z-[1] overflow-hidden">

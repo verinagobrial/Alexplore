@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { AnimatedSection } from "./animated-section"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 
 const packages = [
   {
@@ -56,10 +57,15 @@ const packages = [
 ]
 
 export function PopularPackages() {
+  const router = useRouter()
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
 
+  const handleCustomTrip = () => {
+    router.push("/custom-trip")
+  }
+
   return (
-    <section id="packages" className="py-24 lg:py-32 bg-secondary/30 overflow-hidden">
+    <section id="packages" className="py-24 lg:py-32 bg-secondary/50 overflow-hidden">
       <div className="container mx-auto px-4">
         {/* Section Header */}
         <AnimatedSection className="text-center max-w-3xl mx-auto mb-16">
@@ -95,12 +101,10 @@ export function PopularPackages() {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 via-transparent to-transparent" />
                   
-                  {/* Badge */}
                   <Badge className="absolute top-4 left-4 bg-accent text-foreground text-xs font-semibold">
                     {pkg.badge}
                   </Badge>
 
-                  {/* Price Tag */}
                   <div className="absolute top-4 right-4 bg-card/90 backdrop-blur-sm rounded-2xl px-4 py-2 shadow-lg">
                     <div className="flex items-baseline gap-2">
                       <span className="text-2xl font-bold text-primary">${pkg.price}</span>
@@ -109,7 +113,6 @@ export function PopularPackages() {
                     <span className="text-xs text-muted-foreground">/person</span>
                   </div>
 
-                  {/* Bottom Info */}
                   <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between text-secondary text-sm">
                     <div className="flex items-center gap-1 bg-foreground/50 backdrop-blur-sm px-3 py-1.5 rounded-full">
                       <Clock className="h-4 w-4" />
@@ -144,7 +147,6 @@ export function PopularPackages() {
                     {pkg.description}
                   </p>
 
-                  {/* Highlights */}
                   <div className="mb-4">
                     <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Highlights</p>
                     <div className="flex flex-wrap gap-2">
@@ -159,7 +161,6 @@ export function PopularPackages() {
                     </div>
                   </div>
 
-                  {/* Features */}
                   <div className="grid grid-cols-2 gap-2 mb-6">
                     {pkg.features.map((feature, i) => (
                       <div key={i} className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -183,12 +184,12 @@ export function PopularPackages() {
           ))}
         </div>
 
-        {/* Custom Trip CTA */}
+        {/* Custom Trip CTA with Navigation */}
         <AnimatedSection delay={500} className="mt-16">
           <div className="bg-primary rounded-3xl p-8 lg:p-12 text-center relative overflow-hidden">
             <div className="absolute inset-0 opacity-10">
               <Image
-                src="/images/hero-alexandria.jpg"
+                src="/images/image-1773580378733.png"
                 alt=""
                 fill
                 className="object-cover"
@@ -204,6 +205,7 @@ export function PopularPackages() {
               </p>
               <Button
                 size="lg"
+                onClick={handleCustomTrip}
                 className="bg-accent hover:bg-accent/90 text-foreground rounded-full px-8 hover:scale-105 transition-all"
               >
                 Create Custom Trip
