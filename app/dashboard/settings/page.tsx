@@ -206,20 +206,33 @@ export default function SettingsPage() {
   return (
     <main className="min-h-screen bg-gray-50">
       <Header />
-      
+ 
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-r from-primary to-primary/80 text-white">
-        <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto text-center py-12 md:py-16">
-            <h1 className="text-3xl md:text-4xl font-serif font-bold mb-3">
-              Account Settings
-            </h1>
-            <p className="text-base md:text-lg opacity-90">
-              Manage your profile, password, and notification preferences
-            </p>
-          </div>
-        </div>
-      </section>
+     <section className="relative py-20 overflow-hidden">
+  {/* Image Background */}
+  <div 
+    className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
+    style={{ backgroundImage: "url('/images/image-1773580378733.png')" }}
+  />
+  
+  {/* Blurred Overlay */}
+  <div className="absolute inset-0 bg-primary/60 backdrop-blur-sm z-0" />
+  
+  {/* Optional: Animated gradient overlay */}
+  <div className="absolute inset-0 bg-gradient-to-r from-primary/40 via-primary/20 to-primary/40 z-0" />
+
+  {/* Content */}
+  <div className="container mx-auto px-4 relative z-10">
+    <div className="max-w-3xl mx-auto text-center text-primary-foreground">
+      <h1 className="text-4xl md:text-5xl font-serif font-bold mb-4 animate-fade-in text-secondary">
+       Account settings
+      </h1>
+      <p className="text-lg opacity-90 mb-8 animate-slide-up">
+       The Soul of the Mediterranean in Your Hands.
+      </p>
+    </div>
+  </div>
+</section>
 
       <div className="container mx-auto px-4 py-8 md:py-12">
         <div className="max-w-4xl mx-auto">

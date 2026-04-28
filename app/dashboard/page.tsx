@@ -65,10 +65,23 @@ export default function DashboardPage() {
     <>
       <Header />
       
-      {/* Hero Section - Outside card, full width */}
-      <section className="relative bg-gradient-to-r from-primary to-primary/80 text-white">
-        <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto text-center py-16 md:py-20 lg:py-24">
+         {/* Hero Section */}
+     <section className="relative py-20 overflow-hidden">
+  {/* Image Background */}
+  <div 
+    className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
+    style={{ backgroundImage: "url('/images/image-1773580378733.png')" }}
+  />
+  
+  {/* Blurred Overlay */}
+  <div className="absolute inset-0 bg-primary/60 backdrop-blur-sm z-0" />
+  
+  {/* Optional: Animated gradient overlay */}
+  <div className="absolute inset-0 bg-gradient-to-r from-primary/40 via-primary/20 to-primary/40 z-0" />
+
+  {/* Content */}
+  <div className="container mx-auto px-4 relative z-10">
+    <div className="max-w-3xl mx-auto text-center text-primary-foreground">
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-serif font-bold mb-3 md:mb-4">
               Welcome Back, {profile?.first_name || user?.email?.split('@')[0]}!
             </h1>
@@ -146,7 +159,7 @@ export default function DashboardPage() {
                  <Link href="/my-bookings">
   <Button className="w-full h-24 flex flex-col gap-2 bg-gradient-to-r from-amber-500 to-yellow-500  hover:from-amber-600 hover:to-yellow-600">
     <Package className="h-6 w-6" />
-    <span>Browse Packages</span>
+    <span>My Bookings</span>
   </Button>
 </Link>
                 </div>

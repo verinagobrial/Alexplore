@@ -131,18 +131,33 @@ export default function CustomTripPage() {
     }
   }
 
+  // Updated handleSubmit function with API integration
   const handleSubmit = async () => {
     setIsSubmitting(true)
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    
-    console.log("Custom trip request:", formData)
-    setIsSubmitting(false)
-    setIsSubmitted(true)
-    
-    // In production, send to your API
-    // await fetch('/api/custom-trip', { method: 'POST', body: JSON.stringify(formData) })
+    try {
+      const response = await fetch('/api/custom-trip', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      })
+      
+      const result = await response.json()
+      
+      if (result.success) {
+        // Store trip ID in localStorage for status checking
+        localStorage.setItem('lastTripId', result.data.id)
+        localStorage.setItem('lastTripEmail', formData.email)
+        setIsSubmitted(true)
+      } else {
+        throw new Error(result.message)
+      }
+    } catch (error) {
+      console.error('Submission error:', error)
+      alert('Failed to submit your request. Please try again or contact us directly.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const renderStep = () => {

@@ -1,4 +1,4 @@
-// middleware.ts - Supabase version
+// middleware.ts - FIXED VERSION
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
@@ -30,10 +30,8 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  // IMPORTANT: Don't run auth.getUser() in middleware for performance
-  // Just check the session cookie exists
-  const hasSession = request.cookies.has('sb-access-token') || 
-                     request.cookies.has('sb-refresh-token')
+  // IMPORTANT: Use getSession() instead of checking cookies directly
+  const { data: { session } } = await supabase.auth.getSession()
 
   // Protected routes
   const protectedPaths = ['/dashboard', '/profile', '/my-bookings']
@@ -43,13 +41,15 @@ export async function middleware(request: NextRequest) {
   const authPaths = ['/auth/login', '/auth/sign-up']
   const isAuthPath = authPaths.some(path => request.nextUrl.pathname.startsWith(path))
 
-  if (isProtectedPath && !hasSession) {
+  // Redirect to login if accessing protected route without session
+  if (isProtectedPath && !session) {
     const redirectUrl = new URL('/auth/login', request.url)
     redirectUrl.searchParams.set('redirect', request.nextUrl.pathname)
     return NextResponse.redirect(redirectUrl)
   }
 
-  if (isAuthPath && hasSession) {
+  // Redirect to dashboard if accessing auth routes with session
+  if (isAuthPath && session) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 

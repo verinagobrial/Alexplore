@@ -1,61 +1,60 @@
 // app/admin/page.tsx
-import { createServerClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { 
-  Calendar, 
-  DollarSign, 
-  Users, 
+import {
+  Calendar,
+  DollarSign,
+  Users,
   TrendingUp,
   ArrowRight,
   ArrowUpRight,
   Package,
   Mail,
-  MessageSquare
+  MessageSquare,
 } from 'lucide-react';
-import { Query } from 'appwrite';
 
 export default async function AdminDashboard() {
-  const { databases } = await createServerClient();
+  const supabaseClient = await createClient();
   
-  const databaseId = process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID!;
-  const collections = {
-    bookings: process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_BOOKINGS!,
-    profiles: process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_PROFILES!,
-    messages: process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_MESSAGES!,
-    subscribers: process.env.NEXT_PUBLIC_APPWRITE_COLLECTION_SUBSCRIBERS!,
-  };
+  // Use the raw Supabase client for complex queries
+  const supabase = supabaseClient.raw();
 
-  // Fetch stats in parallel
+  // Fetch all stats in parallel using the raw client
   const [
-    bookingsResponse,
-    profilesResponse,
-    messagesResponse,
-    subscribersResponse,
-    recentBookingsResponse,
+    bookingsCount,
+    usersCount,
+    messagesCount,
+    subscribersCount,
+    recentBookingsRes,
+    confirmedBookingsRes,
   ] = await Promise.all([
-    databases.listDocuments(databaseId, collections.bookings),
-    databases.listDocuments(databaseId, collections.profiles),
-    databases.listDocuments(databaseId, collections.messages),
-    databases.listDocuments(databaseId, collections.subscribers),
-    databases.listDocuments(databaseId, collections.bookings, [
-      Query.orderDesc('$createdAt'),
-      Query.limit(5)
-    ]),
+    supabase.from('bookings').select('*', { count: 'exact', head: true }),
+    supabase.from('profiles').select('*', { count: 'exact', head: true }),
+    supabase.from('messages').select('*', { count: 'exact', head: true }),
+    supabase.from('subscribers').select('*', { count: 'exact', head: true }),
+    supabase
+      .from('bookings')
+      .select('id, package_name, guest_name, guests, total_price, status, created_at')
+      .order('created_at', { ascending: false })
+      .limit(5),
+    supabase
+      .from('bookings')
+      .select('total_price')
+      .eq('status', 'confirmed'),
   ]);
 
-  const totalBookings = bookingsResponse.total;
-  const totalUsers = profilesResponse.total;
-  const totalMessages = messagesResponse.total;
-  const totalSubscribers = subscribersResponse.total;
-  
-  // Calculate revenue from confirmed bookings
-  const confirmedBookings = bookingsResponse.documents.filter(
-    (b: any) => b.status === 'confirmed'
-  );
+  const totalBookings = bookingsCount.count ?? 0;
+  const totalUsers = usersCount.count ?? 0;
+  const totalMessages = messagesCount.count ?? 0;
+  const totalSubscribers = subscribersCount.count ?? 0;
+  const recentBookings = recentBookingsRes.data ?? [];
+  const confirmedBookings = confirmedBookingsRes.data ?? [];
+
+  // Calculate total revenue from confirmed bookings
   const totalRevenue = confirmedBookings.reduce(
-    (sum: number, b: any) => sum + (b.total_price || 0), 
+    (sum: number, b: any) => sum + (b.total_price || 0),
     0
   );
 
@@ -94,26 +93,16 @@ export default async function AdminDashboard() {
     },
   ];
 
-  // Format recent bookings
-  const recentBookings = recentBookingsResponse.documents.map((doc: any) => ({
-    id: doc.$id,
-    package_name: doc.package_name,
-    guest_name: doc.guest_name,
-    guests: doc.guests,
-    total_price: doc.total_price,
-    status: doc.status,
-    created_at: doc.$createdAt,
-  }));
-
   return (
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-serif font-bold text-foreground">Dashboard</h1>
         <p className="text-muted-foreground mt-1">
-          Welcome back! Here's what's happening with Alexplore.
+          Welcome back! Here&apos;s what&apos;s happening with Alexplore.
         </p>
       </div>
 
+      {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat) => {
           const Icon = stat.icon;
@@ -124,14 +113,12 @@ export default async function AdminDashboard() {
                   <div className={`p-3 rounded-lg ${stat.color}`}>
                     <Icon className="h-6 w-6" />
                   </div>
-                  <div className={`flex items-center gap-1 text-sm ${
-                    stat.trend === 'up' ? 'text-green-600' : 'text-red-600'
-                  }`}>
-                    {stat.trend === 'up' ? (
-                      <ArrowUpRight className="h-4 w-4" />
-                    ) : (
-                      <ArrowUpRight className="h-4 w-4" />
-                    )}
+                  <div
+                    className={`flex items-center gap-1 text-sm ${
+                      stat.trend === 'up' ? 'text-green-600' : 'text-red-600'
+                    }`}
+                  >
+                    <ArrowUpRight className="h-4 w-4" />
                     {stat.change}
                   </div>
                 </div>
@@ -174,19 +161,23 @@ export default async function AdminDashboard() {
                       <div>
                         <p className="font-medium">{booking.package_name}</p>
                         <p className="text-sm text-muted-foreground">
-                          {booking.guest_name || 'Guest'} - {booking.guests} guests
+                          {booking.guest_name || 'Guest'} — {booking.guests} guests
                         </p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold">${((booking.total_price || 0) / 100).toFixed(2)}</p>
-                      <span className={`inline-block px-2 py-0.5 text-xs font-medium rounded-full ${
-                        booking.status === 'confirmed' 
-                          ? 'bg-green-100 text-green-700'
-                          : booking.status === 'pending'
-                          ? 'bg-yellow-100 text-yellow-700'
-                          : 'bg-gray-100 text-gray-700'
-                      }`}>
+                      <p className="font-semibold">
+                        ${((booking.total_price || 0) / 100).toFixed(2)}
+                      </p>
+                      <span
+                        className={`inline-block px-2 py-0.5 text-xs font-medium rounded-full ${
+                          booking.status === 'confirmed'
+                            ? 'bg-green-100 text-green-700'
+                            : booking.status === 'pending'
+                            ? 'bg-yellow-100 text-yellow-700'
+                            : 'bg-gray-100 text-gray-700'
+                        }`}
+                      >
                         {booking.status}
                       </span>
                     </div>

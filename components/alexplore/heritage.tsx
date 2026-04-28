@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Image from "next/image"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Landmark, CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react"
 import { AnimatedSection } from "./animated-section"
@@ -96,7 +97,7 @@ export function Heritage() {
                 ))}
               </ul>
             </div>
-
+<Link href="/heritage">
             <Button 
               size="lg"
               className="group bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-8 hover:scale-105 transition-all"
@@ -104,6 +105,7 @@ export function Heritage() {
               Explore Sacred Sites
               <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </Button>
+            </Link>
           </AnimatedSection>
 
           {/* Image Carousel */}

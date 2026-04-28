@@ -12,7 +12,13 @@ import {
   User,
   LogOut,
   LayoutDashboard,
-  Settings
+  Settings,
+  Compass,
+  Mountain,
+  Building,
+  Hotel,
+  MapPin,
+  Wand2
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -45,6 +51,41 @@ const navLinks = [
   { href: "/", label: "Home" },
   { href: "/packages", label: "Packages" },
   { href: "/contact", label: "Contact" },
+]
+
+// More menu items for desktop dropdown and mobile section
+const moreMenuItems = [
+  { 
+    href: "/destinations", 
+    label: "Destinations", 
+    icon: Compass,
+    description: "Explore amazing places"
+  },
+  { 
+    href: "/activities", 
+    label: "Activities", 
+    icon: Mountain,
+    description: "Things to do and experiences"
+  },
+  { 
+    href: "/heritage", 
+    label: "Historical Sites", 
+    icon: MapPin,
+    description: "Ancient wonders & landmarks"
+  },
+  { 
+    href: "/accommodations", 
+    label: "Hotels & Accommodations", 
+    icon: Hotel,
+    description: "Comfortable stays"
+  },
+  { 
+    href: "/custom-trip", 
+    label: "Customize Your Trip", 
+    icon: Wand2,
+    description: "Build your perfect journey",
+    highlight: true
+  },
 ]
 
 export function Header() {
@@ -332,20 +373,25 @@ export function Header() {
                   {link.label}
                 </Link>
               ))}
+              {/* More Dropdown Menu - Desktop */}
               <DropdownMenu>
                 <DropdownMenuTrigger className={`flex items-center gap-1 px-4 py-2 text-sm font-medium rounded-full transition-all duration-300 text-secondary hover:bg-secondary/10`}>
                   More <ChevronDown className="h-4 w-4" />
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48 bg-white border-gray-200">
-                  <DropdownMenuItem asChild className="cursor-pointer hover:bg-gray-100">
-                    <Link href="/#activities" className="text-gray-700">Activities</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild className="cursor-pointer hover:bg-gray-100">
-                    <Link href="/#accommodations" className="text-gray-700">Accommodations</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild className="cursor-pointer hover:bg-gray-100">
-                    <Link href="/#gallery" className="text-gray-700">Gallery</Link>
-                  </DropdownMenuItem>
+                <DropdownMenuContent align="end" className="w-80 bg-white border-gray-200 p-2">
+                  {moreMenuItems.map((item) => (
+                    <DropdownMenuItem key={item.href} asChild className="cursor-pointer hover:bg-gray-100 rounded-lg p-2">
+                      <Link href={item.href} className="flex items-start gap-3 text-gray-700">
+                        <item.icon className="h-5 w-5 mt-0.5 text-primary" />
+                        <div className="flex-1">
+                          <p className={`font-medium ${item.highlight ? 'text-primary' : 'text-gray-900'}`}>
+                            {item.label}
+                          </p>
+                          <p className="text-xs text-gray-500">{item.description}</p>
+                        </div>
+                      </Link>
+                    </DropdownMenuItem>
+                  ))}
                 </DropdownMenuContent>
               </DropdownMenu>
             </nav>
@@ -399,7 +445,7 @@ export function Header() {
         </div>
       </header>
 
-      {/* Mobile Menu - ALWAYS WHITE BACKGROUND, independent of scroll */}
+      {/* Mobile & Tablet Menu */}
       <div 
         className={`lg:hidden fixed inset-0 z-40 transition-all duration-300 ${
           mobileMenuOpen ? "opacity-100 visible" : "opacity-0 invisible pointer-events-none"
@@ -436,28 +482,36 @@ export function Header() {
                 
                 <div className="border-t border-gray-200 my-4" />
                 
-                {/* More Links */}
-                <Link 
-                  href="/#activities"
-                  className="px-4 py-3 text-lg font-medium text-gray-800 hover:text-yellow-600 hover:bg-yellow-50 rounded-xl transition-all"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Activities
-                </Link>
-                <Link 
-                  href="/#accommodations"
-                  className="px-4 py-3 text-lg font-medium text-gray-800 hover:text-yellow-600 hover:bg-yellow-50 rounded-xl transition-all"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Accommodations
-                </Link>
-                <Link 
-                  href="/#gallery"
-                  className="px-4 py-3 text-lg font-medium text-gray-800 hover:text-yellow-600 hover:bg-yellow-50 rounded-xl transition-all"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Gallery
-                </Link>
+                {/* More Section Title - Mobile/Tablet */}
+                <div className="px-4 py-2">
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                    Explore More
+                  </p>
+                </div>
+                
+                {/* More Menu Items - Mobile/Tablet with icons and descriptions */}
+                {moreMenuItems.map((item) => (
+                  <Link 
+                    key={item.href}
+                    href={item.href} 
+                    className={`flex items-start gap-3 px-4 py-3 rounded-xl transition-all ${
+                      item.highlight 
+                        ? 'bg-primary/10 hover:bg-primary/20 text-primary' 
+                        : 'text-gray-800 hover:text-yellow-600 hover:bg-yellow-50'
+                    }`}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <item.icon className={`h-5 w-5 mt-0.5 ${item.highlight ? 'text-primary' : 'text-gray-500'}`} />
+                    <div className="flex-1">
+                      <p className={`font-medium ${item.highlight ? 'text-primary' : ''}`}>
+                        {item.label}
+                      </p>
+                      <p className="text-xs text-gray-500">{item.description}</p>
+                    </div>
+                  </Link>
+                ))}
+
+                <div className="border-t border-gray-200 my-4" />
 
                 <div className="mt-6 flex flex-col gap-3">
                   {loading ? (
