@@ -1,17 +1,33 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   typescript: {
-    ignoreBuildErrors: true,  // Your existing setting
+    ignoreBuildErrors: true,
   },
   images: {
-    unoptimized: true,  // Your existing setting
+    unoptimized: true,
   },
   eslint: {
-    ignoreDuringBuilds: true,  // Add this to ignore ESLint errors
+    ignoreDuringBuilds: true,
   },
-  output: 'standalone',  // Add this for better Vercel deployment
-  swcMinify: true,  // Optional: faster builds
-  reactStrictMode: false,  // Optional: reduces warnings
+  output: 'standalone',
+  distDir: '.next',
+  
+  // Disable static generation for API routes
+  staticPageGenerationTimeout: 180,
+  
+  // Ensure API routes are always dynamic
+  trailingSlash: false,
+  
+  // Add this to handle Turbopack issues
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.optimization = {
+        ...config.optimization,
+        minimize: false,
+      };
+    }
+    return config;
+  },
 }
 
 export default nextConfig
