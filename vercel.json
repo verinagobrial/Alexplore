@@ -1,6 +1,6 @@
 {
-  "buildCommand": "npm run build:vercel",
-  "installCommand": "npm install --legacy-peer-deps --no-audit --no-fund",
+  "buildCommand": "npm run vercel-build",
+  "installCommand": "npm install",
   "framework": "nextjs",
   "outputDirectory": ".next"
 }

@@ -9,25 +9,11 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  output: 'standalone',
+  // Remove 'output: standalone' temporarily - it can cause issues
+  // output: 'standalone',
+  
+  // Ensure dist directory is set correctly
   distDir: '.next',
-  
-  // Disable static generation for API routes
-  staticPageGenerationTimeout: 180,
-  
-  // Ensure API routes are always dynamic
-  trailingSlash: false,
-  
-  // Add this to handle Turbopack issues
-  webpack: (config, { isServer }) => {
-    if (isServer) {
-      config.optimization = {
-        ...config.optimization,
-        minimize: false,
-      };
-    }
-    return config;
-  },
 }
 
 export default nextConfig
