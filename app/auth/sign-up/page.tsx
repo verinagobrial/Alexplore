@@ -1,7 +1,8 @@
-// app/auth/sign-up/page.tsx (Fully updated)
+// app/auth/sign-up/page.tsx
 'use client'
 
-import { useState, useEffect } from 'react'
+import 'crypto'
+import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
@@ -14,7 +15,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
-export default function SignUpPage() {
+function SignUpForm() {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -31,7 +32,6 @@ export default function SignUpPage() {
   const router = useRouter()
 
   useEffect(() => {
-    // Check if Supabase is configured
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL
     const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
     
@@ -82,11 +82,13 @@ export default function SignUpPage() {
       
       console.log('Attempting signup with:', formData.email)
       
+      const origin = typeof window !== 'undefined' ? window.location.origin : ''
+      
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          emailRedirectTo: `${origin}/auth/callback`,
           data: {
             first_name: formData.firstName,
             last_name: formData.lastName,
@@ -133,32 +135,24 @@ export default function SignUpPage() {
   return (
     <main className="min-h-screen bg-gray-50">
       <Header />
-       {/* Hero Section */}
-     <section className="relative py-20 overflow-hidden">
-  {/* Image Background */}
-  <div 
-    className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
-    style={{ backgroundImage: "url('/images/image-1773580378733.png')" }}
-  />
-  
-  {/* Blurred Overlay */}
-  <div className="absolute inset-0 bg-primary/60 backdrop-blur-sm z-0" />
-  
-  {/* Optional: Animated gradient overlay */}
-  <div className="absolute inset-0 bg-gradient-to-r from-primary/40 via-primary/20 to-primary/40 z-0" />
-
-  {/* Content */}
-  <div className="container mx-auto px-4 relative z-10">
-    <div className="max-w-3xl mx-auto text-center text-primary-foreground">
-      <h1 className="text-4xl md:text-5xl font-serif font-bold mb-4 animate-fade-in text-secondary">
-        Start Your Journey
-      </h1>
-      <p className="text-lg opacity-90 mb-8 animate-slide-up">
-       The Soul of the Mediterranean in Your Hands.
-      </p>
-    </div>
-  </div>
-</section>
+      <section className="relative py-20 overflow-hidden">
+        <div 
+          className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: "url('/images/image-1773580378733.png')" }}
+        />
+        <div className="absolute inset-0 bg-primary/60 backdrop-blur-sm z-0" />
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/40 via-primary/20 to-primary/40 z-0" />
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="max-w-3xl mx-auto text-center text-primary-foreground">
+            <h1 className="text-4xl md:text-5xl font-serif font-bold mb-4 animate-fade-in text-secondary">
+              Start Your Journey
+            </h1>
+            <p className="text-lg opacity-90 mb-8 animate-slide-up">
+              The Soul of the Mediterranean in Your Hands.
+            </p>
+          </div>
+        </div>
+      </section>
 
       <div className="flex items-center justify-center py-12 px-4">
         <div className="w-full max-w-md">
@@ -306,5 +300,17 @@ export default function SignUpPage() {
       </div>
       <Footer />
     </main>
+  )
+}
+
+export default function SignUpPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    }>
+      <SignUpForm />
+    </Suspense>
   )
 }

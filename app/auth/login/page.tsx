@@ -1,6 +1,7 @@
-// app/auth/login/page.tsx (FIXED VERSION)
+// app/auth/login/page.tsx
 'use client'
 
+import 'crypto'
 import { Suspense } from 'react'
 import { useState } from 'react'
 import Link from 'next/link'
@@ -14,7 +15,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
-// Create a separate component that uses useSearchParams
 function LoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -49,7 +49,6 @@ function LoginForm() {
   return (
     <>
       <Header />
-      {/* Hero Section */}
       <section className="relative py-20 overflow-hidden">
         <div 
           className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
@@ -138,7 +137,7 @@ function LoginForm() {
               </form>
 
               <div className="mt-6 text-center text-sm text-muted-foreground">
-                Don't have an account?{' '}
+                {"Don't have an account?"}{' '}
                 <Link href="/auth/sign-up" className="text-primary font-semibold hover:underline">
                   Sign up
                 </Link>
@@ -152,7 +151,6 @@ function LoginForm() {
   )
 }
 
-// Main component with Suspense boundary
 export default function LoginPage() {
   return (
     <Suspense fallback={

@@ -6,11 +6,8 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  // Remove 'output: standalone' temporarily - it can cause issues
-  // output: 'standalone',
+  // eslint config is no longer supported in next.config.mjs
+  // Remove the eslint key completely
   
   // Ensure dist directory is set correctly
   distDir: '.next',
