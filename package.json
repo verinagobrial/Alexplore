@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "vercel-build": "next build && echo 'Build completed' || mkdir -p .next && echo '{}' > .next/routes-manifest.json && echo 'Build forced to complete'"
+    "vercel-build": "next build"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
