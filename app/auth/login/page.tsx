@@ -1,6 +1,7 @@
- // app/auth/login/page.tsx (Fixed version)
+// app/auth/login/page.tsx (FIXED VERSION)
 'use client'
 
+import { Suspense } from 'react'
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -13,7 +14,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
-export default function LoginPage() {
+// Create a separate component that uses useSearchParams
+function LoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -45,34 +47,27 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50">
+    <>
       <Header />
-        {/* Hero Section */}
-     <section className="relative py-20 overflow-hidden">
-  {/* Image Background */}
-  <div 
-    className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
-    style={{ backgroundImage: "url('/images/image-1773580378733.png')" }}
-  />
-  
-  {/* Blurred Overlay */}
-  <div className="absolute inset-0 bg-primary/60 backdrop-blur-sm z-0" />
-  
-  {/* Optional: Animated gradient overlay */}
-  <div className="absolute inset-0 bg-gradient-to-r from-primary/40 via-primary/20 to-primary/40 z-0" />
-
-  {/* Content */}
-  <div className="container mx-auto px-4 relative z-10">
-    <div className="max-w-3xl mx-auto text-center text-primary-foreground">
-      <h1 className="text-4xl md:text-5xl font-serif font-bold mb-4 animate-fade-in text-secondary">
-        Start your Journey 
-      </h1>
-      <p className="text-lg opacity-90 mb-8 animate-slide-up">
-       The Soul of the Mediterranean in Your Hands.
-      </p>
-    </div>
-  </div>
-</section>
+      {/* Hero Section */}
+      <section className="relative py-20 overflow-hidden">
+        <div 
+          className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: "url('/images/image-1773580378733.png')" }}
+        />
+        <div className="absolute inset-0 bg-primary/60 backdrop-blur-sm z-0" />
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/40 via-primary/20 to-primary/40 z-0" />
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="max-w-3xl mx-auto text-center text-primary-foreground">
+            <h1 className="text-4xl md:text-5xl font-serif font-bold mb-4 animate-fade-in text-secondary">
+              Start your Journey 
+            </h1>
+            <p className="text-lg opacity-90 mb-8 animate-slide-up">
+              The Soul of the Mediterranean in Your Hands.
+            </p>
+          </div>
+        </div>
+      </section>
 
       <div className="flex items-center justify-center py-16 px-4">
         <div className="w-full max-w-md">
@@ -143,7 +138,7 @@ export default function LoginPage() {
               </form>
 
               <div className="mt-6 text-center text-sm text-muted-foreground">
-                {"Don't have an account?"}{' '}
+                Don't have an account?{' '}
                 <Link href="/auth/sign-up" className="text-primary font-semibold hover:underline">
                   Sign up
                 </Link>
@@ -153,6 +148,19 @@ export default function LoginPage() {
         </div>
       </div>
       <Footer />
-    </main>
+    </>
+  )
+}
+
+// Main component with Suspense boundary
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   )
 }
