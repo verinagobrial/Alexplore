@@ -5,9 +5,18 @@ import Stripe from 'stripe'
 import nodemailer from 'nodemailer'
 import { emailConfig } from '@/lib/email/config'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-02-24.acacia',
-})
+// LAZY INITIALIZATION - No Stripe instance at module level
+let stripeInstance: Stripe | null = null
+
+function getStripe() {
+  if (!stripeInstance && process.env.STRIPE_SECRET_KEY) {
+    console.log('🔧 Initializing Stripe...')
+    stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: '2025-02-24.acacia',
+    })
+  }
+  return stripeInstance
+}
 
 export interface BookingConfirmationData {
   transactionId: string
@@ -40,6 +49,12 @@ export async function createStripePayment(
   }
 ) {
   try {
+    // Get Stripe instance (initialized here, not at build time)
+    const stripe = getStripe()
+    if (!stripe) {
+      throw new Error('Stripe is not configured. Please check STRIPE_SECRET_KEY environment variable.')
+    }
+
     console.log('Creating Stripe session with:', {
       amount,
       currency,
