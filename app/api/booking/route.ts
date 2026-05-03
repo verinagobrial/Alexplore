@@ -1,4 +1,4 @@
-// app/api/bookings/route.ts
+// app/api/booking/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { sendBookingConfirmation } from '@/app/actions/payment'
 

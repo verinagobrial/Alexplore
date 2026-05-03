@@ -23,15 +23,6 @@ export interface BookingConfirmationData {
   paymentMethod: string
 }
 
-// Create transporter for email
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_APP_PASSWORD,
-  },
-})
-
 // Stripe Payment (International Credit Cards)
 export async function createStripePayment(
   amount: number,
@@ -274,6 +265,15 @@ export async function sendBookingConfirmation(data: BookingConfirmationData) {
   try {
     console.log('📧 Sending booking confirmation email to:', data.customerEmail)
     
+    // Create transporter INSIDE the function (only runs at request time, NOT during build)
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_APP_PASSWORD,
+      },
+    })
+    
     const formattedDate = new Date(data.date).toLocaleDateString('en-US', {
       weekday: 'long',
       year: 'numeric',
@@ -324,12 +324,22 @@ function generateEmailHTML(data: BookingConfirmationData, formattedDate: string,
           <div style="background-color: #f9fafb; border-radius: 12px; padding: 24px; margin: 24px 0; border: 1px solid #e5e7eb;">
             <h3 style="color: #f59e0b; margin: 0 0 16px 0;">📋 Booking Details</h3>
             <table style="width: 100%;">
-              <tr><td style="padding: 8px 0; color: #6b7280;">Package:</td><td><strong>${data.packageName}</strong></td></tr>
-              <tr><td style="padding: 8px 0; color: #6b7280;">Date:</td><td><strong>${formattedDate}</strong></td></tr>
-              <tr><td style="padding: 8px 0; color: #6b7280;">Time:</td><td><strong>${formattedTime}</strong></td></tr>
-              <tr><td style="padding: 8px 0; color: #6b7280;">Guests:</td><td><strong>${data.guests}</strong></td></tr>
-              <tr><td style="padding: 8px 0; color: #6b7280;">Total Paid:</td><td><strong>${data.currency} ${data.amount.toLocaleString()}</strong></td></tr>
-             </table>
+              <tr><td style="padding: 8px 0; color: #6b7280;">Package:</td>
+                <td><strong>${data.packageName}</strong></td>
+              </tr>
+              <tr><td style="padding: 8px 0; color: #6b7280;">Date:</td>
+                <td><strong>${formattedDate}</strong></td>
+              </tr>
+              <tr><td style="padding: 8px 0; color: #6b7280;">Time:</td>
+                <td><strong>${formattedTime}</strong></td>
+              </tr>
+              <tr><td style="padding: 8px 0; color: #6b7280;">Guests:</td>
+                <td><strong>${data.guests}</strong></td>
+              </tr>
+              <tr><td style="padding: 8px 0; color: #6b7280;">Total Paid:</td>
+                <td><strong>${data.currency} ${data.amount.toLocaleString()}</strong></td>
+              </tr>
+            </table>
           </div>
           
           <div style="background-color: #fef3c7; border-radius: 12px; padding: 16px; margin-bottom: 24px; text-align: center;">
