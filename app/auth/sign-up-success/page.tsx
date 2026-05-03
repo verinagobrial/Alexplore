@@ -1,14 +1,14 @@
-// app/auth/sign-up-success/page.tsx
 'use client'
 
-import { useState, useEffect } from 'react'
+import { Suspense, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Compass, Mail, CheckCircle, Loader2, AlertCircle } from 'lucide-react'
 
-export default function SignUpSuccessPage() {
+// Inner component that uses useSearchParams
+function SuccessContent() {
   const searchParams = useSearchParams()
   const email = searchParams.get('email') || ''
   const [resending, setResending] = useState(false)
@@ -122,5 +122,14 @@ export default function SignUpSuccessPage() {
         </Card>
       </div>
     </div>
+  )
+}
+
+// Main page with Suspense boundary
+export default function SignUpSuccessPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+      <SuccessContent />
+    </Suspense>
   )
 }
