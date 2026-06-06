@@ -5,12 +5,16 @@ const nextConfig = {
   },
   images: {
     unoptimized: true,
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**.unsplash.com',
+      },
+    ],
   },
-  // eslint config is no longer supported in next.config.mjs
-  // Remove the eslint key completely
-  
-  // Ensure dist directory is set correctly
-  distDir: '.next',
+  experimental: {
+    allowedDevOrigins: ['vm-6um6j92or6tnkazy2h8ggc2t.vusercontent.net'],
+  },
 }
 
 export default nextConfig

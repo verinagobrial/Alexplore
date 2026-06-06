@@ -1,26 +1,18 @@
-import { createClient } from '@/lib/supabase/server';
-import { NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server'
+import { NextRequest, NextResponse } from 'next/server'
 
-export async function GET(request: Request) {
-  const requestUrl = new URL(request.url);
-  const code = requestUrl.searchParams.get('code');
+export async function GET(request: NextRequest) {
+  const { searchParams, origin } = request.nextUrl
+  const code = searchParams.get('code')
+  const next = searchParams.get('next') ?? '/'
 
   if (code) {
-    const supabase = await createClient();
-    
-    // Supabase automatically exchanges the code when you call getSession
-    const { data: { session }, error } = await supabase.auth.getSession();
-    
-    if (error) {
-      console.error('Auth error:', error.message);
-      return NextResponse.redirect(new URL('/auth/login?error=auth', request.url));
-    }
-    
-    if (session) {
-      // Successfully authenticated
-      return NextResponse.redirect(new URL('/dashboard', request.url));
+    const supabase = await createClient()
+    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    if (!error) {
+      return NextResponse.redirect(`${origin}${next}`)
     }
   }
 
-  return NextResponse.redirect(new URL('/auth/login', request.url));
+  return NextResponse.redirect(`${origin}/auth/error`)
 }

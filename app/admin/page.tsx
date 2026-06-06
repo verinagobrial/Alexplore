@@ -1,236 +1,309 @@
-// app/admin/page.tsx
-import { createClient } from '@/lib/supabase/server';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import Link from 'next/link';
-import {
-  Calendar,
-  DollarSign,
-  Users,
-  TrendingUp,
-  ArrowRight,
-  ArrowUpRight,
-  Package,
-  Mail,
-  MessageSquare,
-} from 'lucide-react';
+'use client'
 
-export default async function AdminDashboard() {
-  const supabaseClient = await createClient();
-  
-  // Use the raw Supabase client for complex queries
-  const supabase = supabaseClient.raw();
+import { useState, useEffect } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import { Navbar } from '@/components/navbar'
+import { Footer } from '@/components/footer'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { AlertCircle, Users, BookOpen, Zap, Calendar, DollarSign } from 'lucide-react'
 
-  // Fetch all stats in parallel using the raw client
-  const [
-    bookingsCount,
-    usersCount,
-    messagesCount,
-    subscribersCount,
-    recentBookingsRes,
-    confirmedBookingsRes,
-  ] = await Promise.all([
-    supabase.from('bookings').select('*', { count: 'exact', head: true }),
-    supabase.from('profiles').select('*', { count: 'exact', head: true }),
-    supabase.from('messages').select('*', { count: 'exact', head: true }),
-    supabase.from('subscribers').select('*', { count: 'exact', head: true }),
-    supabase
-      .from('bookings')
-      .select('id, package_name, guest_name, guests, total_price, status, created_at')
-      .order('created_at', { ascending: false })
-      .limit(5),
-    supabase
-      .from('bookings')
-      .select('total_price')
-      .eq('status', 'confirmed'),
-  ]);
+export default function AdminPage() {
+  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null)
+  const [bookings, setBookings] = useState<any[]>([])
+  const [restaurantReservations, setRestaurantReservations] = useState<any[]>([])
+  const [spaBookings, setSpaBookings] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const supabase = createClient()
 
-  const totalBookings = bookingsCount.count ?? 0;
-  const totalUsers = usersCount.count ?? 0;
-  const totalMessages = messagesCount.count ?? 0;
-  const totalSubscribers = subscribersCount.count ?? 0;
-  const recentBookings = recentBookingsRes.data ?? [];
-  const confirmedBookings = confirmedBookingsRes.data ?? [];
+  useEffect(() => {
+    checkAdminStatus()
+  }, [])
 
-  // Calculate total revenue from confirmed bookings
-  const totalRevenue = confirmedBookings.reduce(
-    (sum: number, b: any) => sum + (b.total_price || 0),
-    0
-  );
+  const checkAdminStatus = async () => {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
 
-  const stats = [
-    {
-      title: 'Total Revenue',
-      value: `$${(totalRevenue / 100).toLocaleString()}`,
-      change: '+12%',
-      trend: 'up',
-      icon: DollarSign,
-      color: 'bg-green-100 text-green-600',
-    },
-    {
-      title: 'Total Bookings',
-      value: totalBookings.toString(),
-      change: '+8%',
-      trend: 'up',
-      icon: Calendar,
-      color: 'bg-blue-100 text-blue-600',
-    },
-    {
-      title: 'Registered Users',
-      value: totalUsers.toString(),
-      change: '+15%',
-      trend: 'up',
-      icon: Users,
-      color: 'bg-purple-100 text-purple-600',
-    },
-    {
-      title: 'Newsletter Subs',
-      value: totalSubscribers.toString(),
-      change: '+5%',
-      trend: 'up',
-      icon: Mail,
-      color: 'bg-orange-100 text-orange-600',
-    },
-  ];
+      if (!user) {
+        setIsAuthorized(false)
+        return
+      }
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('is_admin')
+        .eq('id', user.id)
+        .single()
+
+      setIsAuthorized(profile?.is_admin || false)
+
+      if (profile?.is_admin) {
+        fetchAllBookings()
+      }
+    } catch (error) {
+      console.error('[v0] Admin check error:', error)
+      setIsAuthorized(false)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const fetchAllBookings = async () => {
+    try {
+      const [roomBookings, restaurantRes, spaRes] = await Promise.all([
+        supabase.from('room_bookings').select('*, profiles(email), rooms(room_type)'),
+        supabase.from('restaurant_reservations').select('*, profiles(email)'),
+        supabase.from('spa_bookings').select('*, profiles(email), spa_services(name)'),
+      ])
+
+      if (roomBookings.data) setBookings(roomBookings.data)
+      if (restaurantRes.data) setRestaurantReservations(restaurantRes.data)
+      if (spaRes.data) setSpaBookings(spaRes.data)
+    } catch (error) {
+      console.error('[v0] Fetch bookings error:', error)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (isAuthorized === false) {
+    return (
+      <div className="min-h-screen bg-background text-foreground">
+        <Navbar />
+        <main className="max-w-7xl mx-auto px-4 py-20 text-center">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <AlertCircle className="text-destructive" size={24} />
+            <h1 className="text-3xl font-bold">Access Denied</h1>
+          </div>
+          <p className="text-muted-foreground mb-8">
+            You do not have permission to access the admin dashboard.
+          </p>
+          <Button onClick={() => (window.location.href = '/')}>Return to Home</Button>
+        </main>
+        <Footer />
+      </div>
+    )
+  }
+
+  const totalRevenue = [
+    ...bookings.map((b) => b.total_price || 0),
+    ...restaurantReservations.map((r) => r.total_price || 0),
+    ...spaBookings.map((s) => s.total_price || 150),
+  ].reduce((sum, price) => sum + price, 0)
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-serif font-bold text-foreground">Dashboard</h1>
-        <p className="text-muted-foreground mt-1">
-          Welcome back! Here&apos;s what&apos;s happening with Alexplore.
-        </p>
-      </div>
+    <div className="min-h-screen bg-background text-foreground">
+      <Navbar />
+      <main className="max-w-7xl mx-auto px-4 py-12">
+        <div className="mb-12">
+          <h1 className="text-4xl font-bold font-heading mb-2">Admin Dashboard</h1>
+          <p className="text-muted-foreground">Manage all hotel bookings and reservations</p>
+        </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat) => {
-          const Icon = stat.icon;
-          return (
-            <Card key={stat.title}>
-              <CardContent className="pt-6">
-                <div className="flex items-start justify-between">
-                  <div className={`p-3 rounded-lg ${stat.color}`}>
-                    <Icon className="h-6 w-6" />
-                  </div>
-                  <div
-                    className={`flex items-center gap-1 text-sm ${
-                      stat.trend === 'up' ? 'text-green-600' : 'text-red-600'
-                    }`}
-                  >
-                    <ArrowUpRight className="h-4 w-4" />
-                    {stat.change}
-                  </div>
-                </div>
-                <div className="mt-4">
-                  <p className="text-2xl font-bold">{stat.value}</p>
-                  <p className="text-sm text-muted-foreground">{stat.title}</p>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+        {/* Stats Overview */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+          <Card className="bg-card border-border">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Bookings</CardTitle>
+              <BookOpen className="h-4 w-4 text-primary" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{bookings.length + restaurantReservations.length + spaBookings.length}</div>
+              <p className="text-xs text-muted-foreground">All services</p>
+            </CardContent>
+          </Card>
 
-      <div className="grid lg:grid-cols-2 gap-8">
-        {/* Recent Bookings */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle>Recent Bookings</CardTitle>
-              <CardDescription>Latest booking activity</CardDescription>
-            </div>
-            <Link href="/admin/bookings">
-              <Button variant="ghost" size="sm">
-                View All <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
+          <Card className="bg-card border-border">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Room Bookings</CardTitle>
+              <Calendar className="h-4 w-4 text-primary" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{bookings.length}</div>
+              <p className="text-xs text-muted-foreground">Active reservations</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-card border-border">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+              <DollarSign className="h-4 w-4 text-primary" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">${totalRevenue.toFixed(2)}</div>
+              <p className="text-xs text-muted-foreground">All payments</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-card border-border">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Pending Payments</CardTitle>
+              <AlertCircle className="h-4 w-4 text-destructive" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {[...bookings, ...restaurantReservations, ...spaBookings].filter((b) => b.payment_status === 'pending').length}
+              </div>
+              <p className="text-xs text-muted-foreground">Need attention</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Room Bookings Section */}
+        <Card className="bg-card border-border mb-8">
+          <CardHeader>
+            <CardTitle>Room Bookings</CardTitle>
+            <CardDescription>Manage all room reservations</CardDescription>
           </CardHeader>
           <CardContent>
-            {recentBookings.length > 0 ? (
-              <div className="space-y-4">
-                {recentBookings.map((booking: any) => (
-                  <div
-                    key={booking.id}
-                    className="flex items-center justify-between p-4 bg-muted/50 rounded-lg"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="p-2 bg-primary/10 rounded-lg">
-                        <Package className="h-5 w-5 text-primary" />
-                      </div>
-                      <div>
-                        <p className="font-medium">{booking.package_name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {booking.guest_name || 'Guest'} — {booking.guests} guests
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-semibold">
-                        ${((booking.total_price || 0) / 100).toFixed(2)}
-                      </p>
-                      <span
-                        className={`inline-block px-2 py-0.5 text-xs font-medium rounded-full ${
-                          booking.status === 'confirmed'
-                            ? 'bg-green-100 text-green-700'
-                            : booking.status === 'pending'
-                            ? 'bg-yellow-100 text-yellow-700'
-                            : 'bg-gray-100 text-gray-700'
-                        }`}
-                      >
-                        {booking.status}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                No bookings yet
-              </div>
-            )}
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="text-left py-2 px-2">Guest</th>
+                    <th className="text-left py-2 px-2">Room</th>
+                    <th className="text-left py-2 px-2">Check-in</th>
+                    <th className="text-left py-2 px-2">Check-out</th>
+                    <th className="text-left py-2 px-2">Price</th>
+                    <th className="text-left py-2 px-2">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {bookings.slice(0, 10).map((booking: any) => (
+                    <tr key={booking.id} className="border-b border-border hover:bg-muted/50">
+                      <td className="py-2 px-2">{booking.profiles?.email || 'N/A'}</td>
+                      <td className="py-2 px-2">{booking.rooms?.room_type || 'N/A'}</td>
+                      <td className="py-2 px-2">{booking.check_in_date}</td>
+                      <td className="py-2 px-2">{booking.check_out_date}</td>
+                      <td className="py-2 px-2 font-semibold">${booking.total_price}</td>
+                      <td className="py-2 px-2">
+                        <span
+                          className={`text-xs px-2 py-1 rounded ${
+                            booking.payment_status === 'paid'
+                              ? 'bg-green-500/20 text-green-400'
+                              : 'bg-yellow-500/20 text-yellow-400'
+                          }`}
+                        >
+                          {booking.payment_status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {bookings.length === 0 && (
+                <div className="text-center py-8 text-muted-foreground">No room bookings yet</div>
+              )}
+            </div>
           </CardContent>
         </Card>
 
-        {/* Quick Actions */}
-        <Card>
+        {/* Restaurant Reservations Section */}
+        <Card className="bg-card border-border mb-8">
           <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Common administrative tasks</CardDescription>
+            <CardTitle>Restaurant Reservations</CardTitle>
+            <CardDescription>Manage dining reservations</CardDescription>
           </CardHeader>
-          <CardContent className="grid grid-cols-2 gap-4">
-            <Link href="/admin/packages/new">
-              <Button variant="outline" className="w-full h-auto py-4 flex-col gap-2">
-                <Package className="h-6 w-6 text-primary" />
-                <span>Add Package</span>
-              </Button>
-            </Link>
-            <Link href="/admin/destinations/new">
-              <Button variant="outline" className="w-full h-auto py-4 flex-col gap-2">
-                <TrendingUp className="h-6 w-6 text-primary" />
-                <span>Add Destination</span>
-              </Button>
-            </Link>
-            <Link href="/admin/messages">
-              <Button variant="outline" className="w-full h-auto py-4 flex-col gap-2 relative">
-                <MessageSquare className="h-6 w-6 text-primary" />
-                <span>Messages</span>
-                {totalMessages > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                    {totalMessages}
-                  </span>
-                )}
-              </Button>
-            </Link>
-            <Link href="/admin/newsletter">
-              <Button variant="outline" className="w-full h-auto py-4 flex-col gap-2">
-                <Mail className="h-6 w-6 text-primary" />
-                <span>Newsletter</span>
-              </Button>
-            </Link>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="text-left py-2 px-2">Guest</th>
+                    <th className="text-left py-2 px-2">Date</th>
+                    <th className="text-left py-2 px-2">Time</th>
+                    <th className="text-left py-2 px-2">Guests</th>
+                    <th className="text-left py-2 px-2">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {restaurantReservations.slice(0, 10).map((reservation: any) => (
+                    <tr key={reservation.id} className="border-b border-border hover:bg-muted/50">
+                      <td className="py-2 px-2">{reservation.profiles?.email || 'N/A'}</td>
+                      <td className="py-2 px-2">{reservation.reservation_date}</td>
+                      <td className="py-2 px-2">{reservation.reservation_time}</td>
+                      <td className="py-2 px-2">{reservation.number_of_guests}</td>
+                      <td className="py-2 px-2">
+                        <span
+                          className={`text-xs px-2 py-1 rounded ${
+                            reservation.reservation_status === 'confirmed'
+                              ? 'bg-blue-500/20 text-blue-400'
+                              : 'bg-gray-500/20 text-gray-400'
+                          }`}
+                        >
+                          {reservation.reservation_status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {restaurantReservations.length === 0 && (
+                <div className="text-center py-8 text-muted-foreground">No reservations yet</div>
+              )}
+            </div>
           </CardContent>
         </Card>
-      </div>
+
+        {/* Spa Bookings Section */}
+        <Card className="bg-card border-border">
+          <CardHeader>
+            <CardTitle>Spa Bookings</CardTitle>
+            <CardDescription>Manage spa service reservations</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="text-left py-2 px-2">Guest</th>
+                    <th className="text-left py-2 px-2">Service</th>
+                    <th className="text-left py-2 px-2">Date</th>
+                    <th className="text-left py-2 px-2">Time</th>
+                    <th className="text-left py-2 px-2">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {spaBookings.slice(0, 10).map((booking: any) => (
+                    <tr key={booking.id} className="border-b border-border hover:bg-muted/50">
+                      <td className="py-2 px-2">{booking.profiles?.email || 'N/A'}</td>
+                      <td className="py-2 px-2">{booking.spa_services?.name || 'N/A'}</td>
+                      <td className="py-2 px-2">{booking.booking_date}</td>
+                      <td className="py-2 px-2">{booking.booking_time}</td>
+                      <td className="py-2 px-2">
+                        <span
+                          className={`text-xs px-2 py-1 rounded ${
+                            booking.booking_status === 'confirmed'
+                              ? 'bg-green-500/20 text-green-400'
+                              : 'bg-gray-500/20 text-gray-400'
+                          }`}
+                        >
+                          {booking.booking_status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {spaBookings.length === 0 && (
+                <div className="text-center py-8 text-muted-foreground">No spa bookings yet</div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </main>
+      <Footer />
     </div>
-  );
+  )
 }
