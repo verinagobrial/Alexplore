@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { Navbar } from '@/components/navbar'
 import { Footer } from '@/components/footer'
 import { createClient } from '@/lib/supabase/client'
-import { Star, WiFi, AirVent, Coffee, Users } from 'lucide-react'
+import { Star, Wifi, AirVent, Coffee, Users } from 'lucide-react'
 
 interface Room {
   id: string
@@ -26,7 +26,7 @@ export default function AccommodationsPage() {
   const supabase = createClient()
 
   const amenityIcons: { [key: string]: any } = {
-    wifi: WiFi,
+    wifi: Wifi,
     'air conditioning': AirVent,
     'mini bar': Coffee,
     'ocean view': Star,
@@ -152,7 +152,7 @@ export default function AccommodationsPage() {
                         </p>
                         <div className="flex flex-wrap gap-2">
                           {room.amenities.map((amenity, i) => {
-                            const IconComponent = amenityIcons[amenity.toLowerCase()] || WiFi
+                            const IconComponent = amenityIcons[amenity.toLowerCase()] || Wifi
                             return (
                               <div key={i} className="flex items-center gap-1 text-xs text-foreground/70 bg-secondary/20 rounded-full px-3 py-1">
                                 <IconComponent size={12} />
